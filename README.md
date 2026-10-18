@@ -1,8 +1,14 @@
 # Bramble & Basalt Garden Co. — feature demo site
 
-A 25-page demo website for a **made-up business** (garden center + landscaping crew + café),
-built to show prospects everything we can put on a small-business site. Start at
-[`tour.html`](tour.html): it lists all 54 features and links straight to each one.
+A 55-page demo website for a **made-up business** (garden center + landscaping crew + café),
+built to show prospects every page type and feature we can put on a small-business site.
+
+**Live:** https://cloudburstt1993-a11y.github.io/bramble-basalt-demo/tour.html
+(hosted on GitHub Pages from the public repo `cloudburstt1993-a11y/bramble-basalt-demo`,
+which holds only this folder).
+
+Start at [`tour.html`](tour.html): it lists all 87 features grouped by what they do for the
+business, plus a "page types" index with one working example of each.
 
 Same stack as client builds: hand-written HTML, Tailwind v4 standalone CLI, vanilla JS,
 no framework, no `package.json`. Every page is `noindex` so it never shows up in Google.
@@ -10,14 +16,19 @@ no framework, no `package.json`. Every page is `noindex` so it never shows up in
 ## Presenting it
 
 1. Open `tour.html` → **Start the tour with labels on** (or flip **Feature labels** in the
-   dark bar at the top of any page). Every feature gets a yellow tag.
-2. Click through like a customer. Every flow finishes with a real confirmation screen:
-   - Shop → product (pick a size) → cart → promo code **FALL10** or **BLOOM5** → checkout
-   - Book a visit (calendar, time slots, staff, add-to-calendar file)
-   - Instant estimate → financing calculator → 3-step quote form with photo upload
-   - Event tickets, café order-ahead, gift card builder, yard-care plan sign-up,
-     invoice payment, order tracking, job application with resume upload
+   dark bar on any page). Every feature gets a yellow tag.
+2. Click through like a customer. Every flow finishes with a real confirmation:
+   shop → product → cart (codes **FALL10**, **BLOOM5**) → checkout · booking · instant
+   estimate → financing → 3-step quote · estimate approval with e-signature + deposit ·
+   class waiver · rentals · catering · event tickets · café order-ahead · gift cards ·
+   plans · donations · invoice payment · order tracking · job application · referral link.
 3. With labels on, every call tap, form, booking and sale pops up the GA4 event it sends.
+4. Good demo links:
+   - `index.html?utm_source=google&utm_medium=cpc&labels=on` shows call tracking (the
+     phone number swaps to the Google Ads tracking number).
+   - `specials.html` has a real QR code; scanning it opens the promo page tagged as a
+     flyer lead with the flyer's tracking number.
+   - `index.html?ref=MARIA50` shows what a referred friend sees.
 
 Nothing leaves the browser: no form is submitted and no card is charged.
 
@@ -27,9 +38,8 @@ Nothing leaves the browser: no form is submitted and no card is charged.
 serve demo
 ```
 
-`demo/serve.json` turns off `serve`'s clean-URL redirect. Without it, links like
-`product.html?p=lavender` lose their `?p=` and every product opens as the default one.
-Vercel keeps the query string on its redirect, so the live site doesn't need this.
+`demo/serve.json` turns off `serve`'s clean-URL redirect (it drops `?p=` from product
+links) and serves `index.html` at `/`. GitHub Pages and Vercel don't need it.
 
 ## Rebuild the CSS
 
@@ -40,36 +50,54 @@ tailwindcss -i ./src/input.css -o ./css/style.css --minify
 
 Run it from `demo/` so Tailwind scans these pages and `js/`. Commit `css/style.css`.
 
+## Update the live link
+
+Copy this folder into a clone of `bramble-basalt-demo` and push `main`. GitHub Pages
+redeploys in about a minute.
+
 ## What's simulated, and what it connects to on a real site
 
 | In the demo | On a client site |
 |---|---|
-| Forms show a confirmation, nothing is sent | Formspree endpoint (`action` is already on the main forms) |
+| Forms show a confirmation, nothing is sent | Formspree (`action` is already on the main forms); every form carries lead-source fields |
 | “Secure checkout powered by Stripe · demo mode” dialog | Stripe Payment Links or hosted Checkout, publishable key only |
 | Booking calendar with generated open times | Cal.com or Calendly embed, lazy-loaded |
+| Estimate approval, waiver signatures | Documenso, DocuSign or Dropbox Sign for legally tracked signatures |
+| Chat assistant with scripted answers | HubSpot, Tidio or Crisp live chat, or an AI assistant |
+| Phone number swap for ad visitors | CallRail (or similar) dynamic number insertion |
 | Café order-ahead | Square, Toast or Clover online ordering |
-| Gift card balance always shows $50 | The shop's point-of-sale |
-| Order tracking shows a sample status | The store's order system |
-| GA4 events go to `window.dataLayer` | Add the gtag.js snippet in `<head>` with the client's ID; `BB.track()` already fires every event |
-| Reviews marked “Sample review” | The client's real Google reviews |
+| Gift card balance, order tracking | The shop's point-of-sale / order system |
+| Client portal | A sign-in-by-email portal plus Stripe's customer billing portal |
+| GA4 events go to `window.dataLayer` | Add gtag.js in `<head>` with the client's ID; `BB.track()` already fires every event |
+| Reviews marked “Sample” | The client's real Google reviews (never invented) |
 | SVG illustrations | The client's own photos (WebP/AVIF with JPEG fallback) |
 | Phone (970) 555-0142, `.example` email and domain | The client's real NAP, matching their Google Business Profile |
+
+Already live, no account needed: the weather tip (National Weather Service API), the
+OpenStreetMap embed, offline support, site search, add-to-calendar files and the PDF guide.
 
 ## Files
 
 ```
 demo/
-  *.html, services/, blog/   25 pages; header, footer and sticky call bar are duplicated
-                             in each page. To change the nav, grep and edit all of them.
+  *.html + services/ locations/ projects/ team/ jobs/ blog/ guides/ es/
+                             55 pages; header, footer, sticky call bar and chat are
+                             duplicated in each page. To change the nav, edit all of them.
   src/input.css              Tailwind v4 @theme tokens + @layer components
   css/style.css              compiled, committed
-  js/main.js                 site-wide: nav, cart, forms, GA4 events, Stripe stand-in,
-                             open-now hours, feature labels
-  js/catalog.js              product data + card markup
-  js/shop.js                 shop filters, product page, cart/checkout, gift cards
-  js/book.js, quote.js, events.js, gallery.js, cafe.js, contact.js   page scripts
-  assets/img/                SVG illustrations (scenes, products, team, map, logo)
+  js/main.js                 site-wide: nav, cart, forms, GA4 events, Stripe stand-in, hours,
+                             lead source + call tracking, wishlist, countdowns, consent, offline
+  js/chat.js                 chat assistant (every page)
+  js/catalog.js, shop.js     products, shop filters, product page, cart, gift cards, saved items
+  js/book.js quote.js events.js gallery.js cafe.js contact.js sign.js estimate.js rentals.js
+     catering.js locations.js weather.js quiz.js search.js refer.js    page scripts
+  search-index.json          site search data (titles, descriptions, headings); add an
+                             entry by hand when you add a page
+  sw.js, manifest.webmanifest, offline.html    offline support + add to home screen
+  assets/img/                SVG illustrations, QR code
+  assets/docs/               planting calendar PDF (printed from guides/planting-calendar.html)
+  assets/og.png, icon-*.png  link-preview image and app icons
   assets/icons.svg           icon sprite (Lucide paths, ISC license)
   assets/fonts/              Inter + Playfair Display, self-hosted subsets
-  serve.json                 local preview only (see above)
+  serve.json                 local preview only
 ```

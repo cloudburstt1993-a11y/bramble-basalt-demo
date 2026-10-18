@@ -214,6 +214,7 @@
     store: [[10, 16], [8, 18], [8, 18], [8, 18], [8, 18], [8, 18], [8, 18]],
     cafe: [[8, 14], [7, 14], [7, 14], [7, 14], [7, 14], [7, 14], [7, 14]],
     office: [null, [7, 17], [7, 17], [7, 17], [7, 17], [7, 17], null],
+    yard: [null, [7, 17], [7, 17], [7, 17], [7, 17], [7, 17], [8, 12]],
   };
   const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const h12 = h => `${h % 12 || 12} ${h < 12 ? 'am' : 'pm'}`;
@@ -241,6 +242,106 @@
     if (t) t.textContent = s.text;
   });
 
+  /* ------------------------------------- lead source + call tracking -- */
+  // Every form carries where the visitor came from, so the owner can see which ads
+  // and pages bring in work. Visitors from an ad or flyer see that campaign's
+  // tracking number; everyone else (and Google) sees the main number in the HTML.
+  const src = (() => {
+    const p = new URLSearchParams(location.search);
+    let s = null;
+    try {
+      if (p.get('utm_source')) s = `${p.get('utm_source')} / ${p.get('utm_medium') || 'referral'}${p.get('utm_campaign') ? ' / ' + p.get('utm_campaign') : ''}`;
+      else if (p.get('gclid')) s = 'google / cpc';
+      else if (p.get('fbclid')) s = 'facebook / paid';
+      else if (document.referrer && new URL(document.referrer).host !== location.host) s = new URL(document.referrer).host.replace(/^www\./, '') + ' / referral';
+    } catch { /* malformed referrer */ }
+    try { if (s) sessionStorage.setItem('bb-src', s); s = sessionStorage.getItem('bb-src') || s; } catch { /* storage blocked */ }
+    s = s || '(direct) / none';
+    if (!store.get('bb-first', null)) store.set('bb-first', { src: s, page: location.pathname });
+    return s;
+  })();
+  const DNI = { google: ['+19705550187', '(970) 555-0187'], facebook: ['+19705550163', '(970) 555-0163'], flyer: ['+19705550171', '(970) 555-0171'] };
+  const dni = DNI[src.split(' / ')[0]];
+  if (dni) {
+    $$('a[href="tel:+19705550142"]').forEach(a => {
+      a.href = 'tel:' + dni[0];
+      const w = document.createTreeWalker(a, NodeFilter.SHOW_TEXT);
+      while (w.nextNode()) w.currentNode.textContent = w.currentNode.textContent.replace('(970) 555-0142', dni[1]);
+    });
+    if (html.classList.contains('features-on')) setTimeout(() => toast(`${icon('phone', 'icon-sm')} Call tracking: visitors from <b>${esc(src.split(' / ')[0])}</b> see ${dni[1]}`, { ms: 6000 }), 600);
+  }
+  $$('form[data-demo-form], form[action*="formspree"]').forEach(f => {
+    [['lead_source', src], ['first_touch', store.get('bb-first', {}).src || src], ['landing_page', store.get('bb-first', {}).page || location.pathname], ['page', location.pathname]].forEach(([n, v]) => {
+      if (f.querySelector(`[name="${n}"]`)) return;
+      const i = document.createElement('input'); i.type = 'hidden'; i.name = n; i.value = v; f.append(i);
+    });
+  });
+
+  /* ------------------------------------------- conditional form fields -- */
+  // <div data-show-when="minor=yes"> appears only when the form's "minor" field is
+  // "yes". Hidden fields are disabled so they never block submission.
+  const evalCond = form => $$('[data-show-when]', form).forEach(el => {
+    const [name, vals] = el.dataset.showWhen.split('=');
+    const field = form.elements[name];
+    let v = '';
+    if (field instanceof RadioNodeList) v = field.value;
+    else if (field && field.type === 'checkbox') v = field.checked ? 'yes' : '';
+    else if (field) v = field.value;
+    const on = vals.split(',').includes(v);
+    el.hidden = !on;
+    $$('input,select,textarea,button', el).forEach(i => { i.disabled = !on; });
+  });
+  $$('form').forEach(f => { if ($('[data-show-when]', f)) { f.addEventListener('change', () => evalCond(f)); f.addEventListener('input', () => evalCond(f)); evalCond(f); } });
+
+  /* ---------------------------------------------------- saved items -- */
+  const WISH = 'bb-wish';
+  const paintWish = () => {
+    const w = store.get(WISH, []);
+    $$('[data-wish]').forEach(b => b.setAttribute('aria-pressed', String(w.includes(b.dataset.wish))));
+    $$('[data-wish-count]').forEach(el => { el.textContent = w.length; });
+  };
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-wish]');
+    if (!b) return;
+    const w = store.get(WISH, []), id = b.dataset.wish, on = !w.includes(id);
+    store.set(WISH, on ? [...w, id] : w.filter(x => x !== id));
+    paintWish();
+    document.dispatchEvent(new CustomEvent('bb:wish'));
+    if (on) { toast(`${icon('heart', 'icon-sm')} Saved for later`, { href: ROOT + 'wishlist.html', label: 'View saved' }); track('add_to_wishlist', { item_id: id }); }
+  });
+  paintWish();
+
+  /* ---------------------------------- print, consent preview, misc -- */
+  document.addEventListener('click', e => {
+    if (e.target.closest('[data-print]')) { track('print', { page: location.pathname }); window.print(); }
+    if (e.target.closest('[data-consent-preview]')) { e.preventDefault(); showConsent(); }
+    const c = e.target.closest('[data-consent]');
+    if (c) {
+      store.set('bb-consent', c.dataset.consent);
+      c.closest('.consent').remove();
+      toast(c.dataset.consent === 'all' ? 'Analytics allowed. On a live site GA4 loads now.' : 'Declined. Analytics stays off for this visitor.');
+    }
+  });
+  function showConsent() {
+    if ($('.consent')) return;
+    const c = document.createElement('div');
+    c.className = 'consent on-dark';
+    c.setAttribute('role', 'dialog');
+    c.setAttribute('aria-labelledby', 'consent-h');
+    c.innerHTML = `<p id="consent-h" class="font-semibold text-white">Cookies for analytics only</p>
+      <p class="mt-1 text-sm">We count visits to learn which pages help customers. Nothing is sold or used for ads, and it stays off unless you allow it.</p>
+      <div class="mt-4 flex flex-wrap items-center gap-2"><button type="button" class="btn btn-accent btn-sm" data-consent="all">Allow analytics</button><button type="button" class="btn btn-ghost-dark btn-sm" data-consent="none">Decline</button><a class="link text-sm" href="${ROOT}privacy.html">Privacy policy</a></div>`;
+    document.body.append(c);
+    $('button', c).focus();
+  }
+  const roleParam = new URLSearchParams(location.search).get('role');
+  if (roleParam && $('#ap-role')) $('#ap-role').value = roleParam;
+
+  // Offline support: pages a visitor has opened keep working with no signal.
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    window.addEventListener('load', () => navigator.serviceWorker.register(ROOT + 'sw.js').catch(() => {}));
+  }
+
   /* ------------------------------------------------------- demo forms -- */
   // Live builds POST to Formspree with fetch(form.action, { method: 'POST',
   // body: new FormData(form), headers: { Accept: 'application/json' } }).
@@ -253,6 +354,8 @@
         const big = [...(f.files || [])].find(x => x.size > max);
         if (big) { toast(`${esc(big.name)} is over ${f.dataset.maxMb} MB. Try a smaller file.`); f.focus(); return; }
       }
+      if (html.classList.contains('features-on')) toast(`${icon('chart', 'icon-sm')} Lead source attached: <code>${esc(src)}</code>`, { ga: true });
+      if (form.dataset.redirect) { track(form.dataset.event || 'generate_lead', { form_name: form.dataset.demoForm, lead_source: src }); location.href = ROOT + form.dataset.redirect; return; }
       const data = new FormData(form);
       const first = String(data.get('name') || data.get('first') || '').trim().split(/\s+/)[0];
       const ok = form.dataset.success ? document.getElementById(form.dataset.success) : form.parentElement.querySelector('[data-form-success]');
@@ -263,7 +366,7 @@
         toast(`${icon('check', 'icon-sm')} Thanks! You're on the list.`);
         form.reset();
       }
-      track(form.dataset.event || 'generate_lead', { form_name: form.dataset.demoForm });
+      track(form.dataset.event || 'generate_lead', { form_name: form.dataset.demoForm, lead_source: src });
     });
   });
   document.addEventListener('click', e => {
@@ -378,6 +481,64 @@
     sel.focus({ preventScroll: true });
   }));
 
+  /* --------------------------------------------------------- countdowns -- */
+  // <div data-countdown="2027-03-14T09:00:00-06:00"> with [data-cd="d|h|m|s"] inside.
+  // Only ever counts to a real date: no fake "offer ends" timers.
+  const countdowns = () => $$('[data-countdown]').forEach(el => {
+    if (el.dataset.cdOn) return;
+    el.dataset.cdOn = '1';
+    const end = new Date(el.dataset.countdown).getTime();
+    const tick = () => {
+      const s = Math.max(0, Math.floor((end - Date.now()) / 1000));
+      const v = { d: Math.floor(s / 86400), h: Math.floor(s % 86400 / 3600), m: Math.floor(s % 3600 / 60), s: s % 60 };
+      Object.entries(v).forEach(([k, n]) => { const b = $(`[data-cd="${k}"]`, el); if (b) b.textContent = n; });
+      if (s > 0) setTimeout(tick, 1000);
+    };
+    tick();
+  });
+  countdowns();
+
+  /* ------------------------------------------- simple pay forms -- */
+  // <form data-pay="Title"> with an "amount" radio group (or "custom" + name="custom").
+  // Live builds point each one at a Stripe Payment Link that lets the customer choose the amount.
+  $$('form[data-pay]').forEach(f => f.addEventListener('submit', async e => {
+    e.preventDefault();
+    const d = new FormData(f);
+    const amt = Math.round(+(d.get('amount') === 'custom' ? d.get('custom') : d.get('amount')) * 100) / 100;
+    if (!(amt >= 1)) { toast('Enter an amount of at least $1.'); return; }
+    const paid = await stripeDemo({ title: f.dataset.pay, lines: [{ label: f.dataset.payLine || f.dataset.pay, amount: amt }], total: amt, note: f.dataset.payNote || '' });
+    if (!paid) return;
+    track('purchase', { value: amt, currency: 'USD', item_category: f.dataset.payCategory || 'payment' });
+    const ok = f.parentElement.querySelector('[data-form-success]');
+    if (ok) { $$('[data-fill="amount"]', ok).forEach(x => { x.textContent = money(amt); }); f.hidden = true; ok.hidden = false; ok.focus(); }
+  }));
+
+  // Buttons that stand in for a third-party screen (billing portal, social feed…).
+  document.addEventListener('click', e => {
+    const x = e.target.closest('[data-explain]');
+    if (x) { e.preventDefault(); toast(esc(x.dataset.explain), { ms: 7000 }); track('demo_explain', { feature: x.dataset.explainFeature || '' }); }
+    const a = e.target.closest('a[href$=".pdf"]');
+    if (a) track('file_download', { file_name: a.getAttribute('href').split('/').pop() });
+  });
+
+  // Arriving from a friend's referral link.
+  const ref = new URLSearchParams(location.search).get('ref');
+  if (ref && /^[A-Z0-9]{3,12}$/i.test(ref)) {
+    store.set('bb-ref', ref.toUpperCase());
+    setTimeout(() => toast(`${icon('gift', 'icon-sm')} A friend sent you $50 off your first project. Code <b>${esc(ref.toUpperCase())}</b> is saved.`, { href: ROOT + 'book.html?service=estimate', label: 'Book', ms: 8000 }), 500);
+    track('referral_visit', { code: ref.toUpperCase() });
+  }
+
+  // Thank-you page: the message matches the form that sent the visitor here.
+  const thanks = $('#thanks-root');
+  if (thanks) {
+    const from = new URLSearchParams(location.search).get('form') || 'contact';
+    const T = { 'fall-reset': ['Your Fall Yard Reset is requested.', 'We’ll text within one business day to lock in your date.'], contact: ['Your message is in.', 'We reply within one business day, usually much sooner.'] }[from] || ['Thanks, you’re all set.', 'We’ll be in touch within one business day.'];
+    $('[data-thanks-title]', thanks).textContent = T[0];
+    $('[data-thanks-sub]', thanks).textContent = T[1];
+    track('thank_you_view', { form_name: from });
+  }
+
   /* --------------------------------------------------- share & copy -- */
   document.addEventListener('click', async e => {
     const s = e.target.closest('[data-share]');
@@ -390,5 +551,5 @@
     if (c) { try { await navigator.clipboard.writeText(c.dataset.copy); toast(`Copied <b>${esc(c.dataset.copy)}</b>`); } catch { toast(`Code: <b>${esc(c.dataset.copy)}</b>`); } }
   });
 
-  window.BB = { $, $$, esc, money, icon, store, toast, track, cart, stripeDemo, openDialog, ics, gcal, fmtDate, fmtTime, ROOT, HOURS, h12, denverNow };
+  window.BB = { $, $$, esc, money, icon, store, toast, track, cart, stripeDemo, openDialog, ics, gcal, fmtDate, fmtTime, ROOT, HOURS, h12, denverNow, paintWish, src, evalCond, openState, countdowns };
 })();

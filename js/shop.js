@@ -96,6 +96,7 @@
                 <div class="stepper"><button type="button" aria-label="Decrease quantity" data-step="-1">${icon('minus', 'icon-sm')}</button><input id="pd-qty" type="number" inputmode="numeric" min="1" max="99" value="1"><button type="button" aria-label="Increase quantity" data-step="1">${icon('plus', 'icon-sm')}</button></div>
               </div>
               <button type="submit" class="btn btn-primary btn-lg flex-1">${icon('cart')} Add to cart</button>
+              <button type="button" class="btn btn-light btn-lg" data-wish="${p.id}" aria-pressed="false">${icon('heart', 'icon-sm fill-when-pressed')} Save</button>
             </div>
           </form>` : `
           <div id="notify" class="mt-6 rounded-2xl border border-sand-300 bg-white p-5" data-feature="Back-in-stock alerts">
@@ -157,6 +158,8 @@
       const same = pool.filter(x => x.cat === p.cat), other = pool.filter(x => x.cat !== p.cat);
       rel.innerHTML = [...same, ...other].slice(0, 4).map((x, i) => window.bbCard(x, i)).join('');
     }
+    store.set('bb-recent', [p.id, ...store.get('bb-recent', []).filter(x => x !== p.id)].slice(0, 8));
+    window.BB.paintWish();
   }
 
   /* ============================================================ cart == */
@@ -358,5 +361,47 @@
       out.innerHTML = `<b>Balance: $50.00</b> <span class="sample-tag">Sample</span><br><span class="help">Live sites look this up in your point-of-sale (Square, Clover, Shopify POS).</span>`;
       track('gift_card_balance_check');
     });
+  }
+
+  /* ================================================== recently viewed == */
+  const recent = $('#recent-root');
+  if (recent) {
+    const ids = store.get('bb-recent', []).filter(byId).slice(0, 4);
+    if (ids.length) {
+      recent.hidden = false;
+      $('[data-recent-grid]', recent).innerHTML = ids.map((id, i) => window.bbCard(byId(id), i)).join('');
+      window.BB.paintWish();
+    }
+  }
+
+  /* ===================================================== saved items == */
+  const wish = $('#wish-root');
+  if (wish) {
+    const shared = new URLSearchParams(location.search).get('items');
+    const render = () => {
+      const ids = (shared ? shared.split(',') : store.get('bb-wish', [])).filter(byId);
+      const intro = $('#wish-intro');
+      if (shared) intro.innerHTML = `Someone shared ${ids.length} plant${ids.length === 1 ? '' : 's'} with you. <button type="button" class="link" data-wish-keep>Save them to your list</button>`;
+      if (!ids.length) {
+        wish.innerHTML = `<div class="py-12 text-center"><p class="title-3">Nothing saved yet.</p><p class="muted mt-2">Tap the heart on any product to keep it here for later.</p><a class="btn btn-primary mt-5" href="shop.html">Browse the garden center</a></div>`;
+        $('#wish-actions').hidden = true;
+        return;
+      }
+      $('#wish-actions').hidden = false;
+      wish.innerHTML = `<div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">${ids.map((id, i) => window.bbCard(byId(id), i)).join('')}</div>`;
+      const link = new URL('wishlist.html', location.href); link.searchParams.set('items', ids.join(','));
+      $('#wish-share').dataset.copy = link.href;
+      window.BB.paintWish();
+    };
+    document.addEventListener('bb:wish', () => { if (!shared) render(); });
+    document.addEventListener('click', e => {
+      if (e.target.closest('[data-wish-keep]')) { store.set('bb-wish', [...new Set([...store.get('bb-wish', []), ...shared.split(',').filter(byId)])]); toast('Saved to your list.'); }
+      if (e.target.closest('[data-wish-all]')) {
+        const ids = (shared ? shared.split(',') : store.get('bb-wish', [])).filter(byId);
+        ids.forEach(id => { const p = byId(id); if (p.stock === false) return; const v = p.variants ? p.variants[0] : null; cart.add({ key: p.id + ':0', id: p.id, name: p.name, variant: v ? v[0] : '', price: v ? v[1] : (p.sale ?? p.price), qty: 1, img: `assets/img/product-${p.id}.svg`, ship: p.ship, href: `product.html?p=${p.id}` }, { silent: true }); });
+        toast(`${icon('check', 'icon-sm')} Added your saved items to the cart`, { href: 'cart.html', label: 'View cart' });
+      }
+    });
+    render();
   }
 })();

@@ -14,6 +14,8 @@
     title.textContent = b.dataset.title;
     meta.textContent = b.dataset.meta;
     count.textContent = `${i + 1} of ${items.length}`;
+    const st = $('#lb-story');
+    if (st) { st.hidden = !b.dataset.story; if (b.dataset.story) st.href = b.dataset.story; }
   };
   document.addEventListener('click', e => {
     const b = e.target.closest('[data-lightbox]');

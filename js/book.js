@@ -158,5 +158,7 @@
   const pre = new URLSearchParams(location.search).get('service');
   const preInput = pre && $(`input[name="service"][value="${CSS.escape(pre)}"]`, root);
   if (preInput) { preInput.checked = true; preInput.dispatchEvent(new Event('change')); }
+  const preStaff = new URLSearchParams(location.search).get('staff');
+  if (state.service && preStaff && SERVICES[state.service].staff.includes(preStaff)) state.staff = preStaff;
   renderStaff(); renderCal(); renderSlots(); renderSummary();
 })();

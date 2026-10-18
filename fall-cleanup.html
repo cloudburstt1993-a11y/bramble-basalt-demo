@@ -11,7 +11,14 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="Fall Yard Reset: Cleanup, Aeration & Sprinkler Blowout for $249 | Bramble & Basalt">
 <meta property="og:description" content="Leaf cleanup, core aeration and a sprinkler blowout in one visit for $249. Grand Junction, Fruita and Palisade. Demo site.">
+<meta property="og:url" content="https://cloudburstt1993-a11y.github.io/bramble-basalt-demo/fall-cleanup.html">
+<meta property="og:image" content="https://cloudburstt1993-a11y.github.io/bramble-basalt-demo/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="preload" href="assets/fonts/inter-latin-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/playfair-latin-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/style.css">
@@ -33,6 +40,7 @@
       <img src="assets/img/logo-mark.svg" alt="" width="64" height="64" class="size-10">
       <span><span class="brand-name">Bramble &amp; Basalt</span><span class="brand-sub">Garden Co.</span></span>
     </a>
+    
     <a href="tel:+19705550142" class="btn btn-outline btn-sm ml-auto" data-loc="landing-header"><svg class="icon-sm" aria-hidden="true"><use href="assets/icons.svg#phone"/></svg> <span class="hidden sm:inline">(970) 555-0142</span><span class="sm:hidden">Call</span></a>
   </div>
 </header>
@@ -52,7 +60,7 @@
       </ul>
     </div>
     <div id="claim" class="rounded-3xl bg-white p-6 text-basalt-900 shadow-lift md:p-8" data-feature="Short lead form above the fold">
-      <form class="grid gap-4" data-demo-form="fall-reset">
+      <form class="grid gap-4" data-demo-form="fall-reset" data-redirect="thank-you.html?form=fall-reset">
         <h2 class="title-3">Claim your Fall Yard Reset</h2>
         <div class="field"><label class="label" for="fr-name">Name</label><input id="fr-name" class="input" name="name" required autocomplete="name"></div>
         <div class="field"><label class="label" for="fr-phone">Mobile phone</label><input id="fr-phone" class="input" type="tel" name="phone" required autocomplete="tel"></div>
@@ -116,6 +124,6 @@
 </nav>
 <div id="toasts" class="toast-region" aria-live="polite"></div>
 <script src="js/main.js" defer></script>
-
+<script src="js/chat.js" defer></script>
 </body>
 </html>
