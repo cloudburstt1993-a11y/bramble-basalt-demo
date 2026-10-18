@@ -37,11 +37,13 @@ No card is ever charged. What's live is set in the `CONFIG` block at the top of
 |---|---|---|
 | GA4 | Live, `G-9CMP8DK83V` | "Bramble & Basalt demo site" property in the Bookcliff Web Analytics account |
 | Cal.com | Live: the booking page embeds the real calendar | `cal.com/demo-bcw`, the separate demo login |
-| Formspree | Not yet: forms show a confirmation, nothing is sent | — |
+| Formspree | Live: every form and order request is emailed, with its lead source | Form `mkjoevop` in the separate demo login; free plan, 50 submissions a month |
 | Stripe | Not yet: checkout opens the demo dialog | — |
 
 Bookings made on the demo land in the `demo-bcw` Cal.com account and email the address
-the visitor typed, so book with your own email when you show it.
+the visitor typed, so book with your own email when you show it. Form submissions go to
+the demo login's inbox. Formspree's spam filter sent a test with an example.com
+address and "test" in the message to its Spam tab, so demo with realistic details.
 
 ## Preview locally
 

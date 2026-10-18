@@ -23,7 +23,7 @@
   // never a Stripe secret key.
   const CONFIG = {
     ga4: 'G-9CMP8DK83V',  // loaded in <head> on every page
-    formspree: '',        // the ID from https://formspree.io/f/<id>
+    formspree: 'mkjoevop', // https://formspree.io/f/<id>, in the demo Formspree login
     // cal.com/demo-bcw: booking type slugs keyed by the service radios on book.html
     cal: { user: 'demo-bcw', events: { estimate: 'estimate', design: 'design', blowout: 'blowout', lawn: 'lawn', shop: 'shop' } },
     // Stripe test-mode Payment Links, keyed by what they sell.
@@ -359,12 +359,16 @@
   /* ------------------------------------------------------------ forms -- */
   // With CONFIG.formspree set, every form lands in the business inbox through
   // Formspree. File uploads need a paid Formspree plan, so files are listed by
-  // name instead. Without it, nothing leaves the browser.
+  // name instead, and a drawn signature (a PNG data URL) is noted, not pasted
+  // into the email. Without it, nothing leaves the browser.
   async function sendLead(name, data) {
     if (!CONFIG.formspree) return true;
     const fd = data instanceof FormData ? data : Object.entries(data).reduce((x, [k, v]) => { x.append(k, v); return x; }, new FormData());
     const files = [];
-    for (const [k, v] of [...fd.entries()]) if (v instanceof File) { if (v.name) files.push(v.name); fd.delete(k); }
+    for (const [k, v] of [...fd.entries()]) {
+      if (v instanceof File) { if (v.name) files.push(v.name); fd.delete(k); }
+      else if (v.startsWith('data:image/')) fd.set(k, 'drawn on screen');
+    }
     if (files.length) fd.append('files_named', files.join(', '));
     fd.append('form_name', name);
     fd.append('_subject', `Demo site: ${name.replace(/-/g, ' ')}`);
@@ -573,10 +577,12 @@
   const thanks = $('#thanks-root');
   if (thanks) {
     const from = new URLSearchParams(location.search).get('form') || 'contact';
-    const T = { 'fall-reset': ['Your Fall Yard Reset is requested.', 'We’ll text within one business day to lock in your date.'], contact: ['Your message is in.', 'We reply within one business day, usually much sooner.'] }[from] || ['Thanks, you’re all set.', 'We’ll be in touch within one business day.'];
+    const T = { 'fall-reset': ['Your Fall Yard Reset is requested.', 'We’ll text within one business day to lock in your date.'], contact: ['Your message is in.', 'We reply within one business day, usually much sooner.'], paid: ['Payment received. Thank you!', 'This was a Stripe test payment, so no real card was charged.'] }[from] || ['Thanks, you’re all set.', 'We’ll be in touch within one business day.'];
     $('[data-thanks-title]', thanks).textContent = T[0];
     $('[data-thanks-sub]', thanks).textContent = T[1];
     track('thank_you_view', { form_name: from });
+    // Stripe Payment Links redirect here with ?form=paid&item=<CONFIG.stripe key>.
+    if (from === 'paid') track('purchase', { currency: 'USD', item_name: new URLSearchParams(location.search).get('item') || '' });
   }
 
   /* --------------------------------------------------- share & copy -- */
