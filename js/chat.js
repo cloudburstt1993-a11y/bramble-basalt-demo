@@ -69,6 +69,7 @@
         const d = new FormData(e.target);
         e.target.replaceWith(Object.assign(document.createElement('p'), { className: 'chat-msg chat-bot', innerHTML: `Thanks, ${esc(String(d.get('name')).split(' ')[0])}! Someone will call ${esc(d.get('phone'))} within the hour during business hours.` }));
         track('generate_lead', { form_name: 'chat', lead_source: window.BB.src });
+        window.BB.sendLead('chat-callback', { name: String(d.get('name')), phone: String(d.get('phone')), page: location.pathname });
       }
     });
     panel.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });

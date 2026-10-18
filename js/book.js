@@ -2,7 +2,7 @@
    this page shows the same flow with availability generated in the browser. */
 (() => {
   'use strict';
-  const { $, $$, esc, money, icon, toast, track, ics, gcal, fmtDate, fmtTime } = window.BB;
+  const { $, $$, esc, money, icon, toast, track, ics, gcal, fmtDate, fmtTime, CONFIG, sendLead, sendFailed } = window.BB;
   const root = $('#booking');
   if (!root) return;
 
@@ -42,9 +42,40 @@
     return out;
   }
 
+  /* ---- live booking: the business's own Cal.com calendar ---- */
+  const CAL = CONFIG.cal || {};
+  const live = !!CAL.user;
+  let calReady = false;
+  function calLoad() {
+    if (calReady) return window.Cal;
+    // Cal.com's embed loader, as published in their embed docs.
+    (function (C, A, L) { const p = function (a, ar) { a.q.push(ar); }; const d = C.document; C.Cal = C.Cal || function () { const cal = C.Cal; const ar = arguments; if (!cal.loaded) { cal.ns = {}; cal.q = cal.q || []; d.head.appendChild(d.createElement('script')).src = A; cal.loaded = true; } if (ar[0] === L) { const api = function () { p(api, arguments); }; const namespace = ar[1]; api.q = api.q || []; if (typeof namespace === 'string') { cal.ns[namespace] = cal.ns[namespace] || api; p(cal.ns[namespace], ar); p(cal, ['initNamespace', namespace]); } else p(cal, ar); return; } p(cal, ar); }; })(window, 'https://app.cal.com/embed/embed.js', 'init');
+    window.Cal('init', 'bb', { origin: 'https://app.cal.com' });
+    const brand = getComputedStyle(document.documentElement).getPropertyValue('--color-juniper-700').trim();
+    window.Cal.ns.bb('ui', { theme: 'light', hideEventTypeDetails: false, layout: 'month_view', cssVarsPerTheme: { light: { 'cal-brand': brand } } });
+    const done = () => { track('book_appointment', { service: state.service, booking_tool: 'cal.com' }); };
+    window.Cal.ns.bb('on', { action: 'bookingSuccessfulV2', callback: done });
+    calReady = true;
+    return window.Cal;
+  }
+  function showLive(service) {
+    const slug = CAL.events[service];
+    if (!slug) return false;
+    calLoad();
+    $$('#booking > div > section:not(:first-child)').forEach(s => { s.hidden = true; });
+    $('#booking aside').hidden = true;
+    const box = $('#bk-live');
+    box.hidden = false;
+    $('#cal-inline').innerHTML = '';
+    window.Cal.ns.bb('inline', { elementOrSelector: '#cal-inline', calLink: `${CAL.user}/${slug}`, config: { layout: 'month_view' } });
+    track('booking_calendar_opened', { service });
+    return true;
+  }
+
   /* ---- step 1: service ---- */
   $$('input[name="service"]', root).forEach(r => r.addEventListener('change', () => {
     state.service = r.value; state.staff = 'any'; state.time = null;
+    if (live && showLive(r.value)) return;
     renderStaff(); renderCal(); renderSlots(); renderSummary();
     $('[name="address"]', root).closest('.field').hidden = !SERVICES[r.value].onsite;
     $('[name="address"]', root).required = SERVICES[r.value].onsite;
@@ -125,13 +156,15 @@
   }
 
   /* ---- step 4: confirm ---- */
-  $('#bk-form').addEventListener('submit', e => {
+  $('#bk-form').addEventListener('submit', async e => {
     e.preventDefault();
     if (!state.service) { toast('Choose a service first.'); $('input[name="service"]', root).focus(); return; }
     if (!state.time) { toast('Pick a date and time.'); $('#bk-cal').scrollIntoView({ block: 'center' }); return; }
     const d = new FormData(e.target), s = SERVICES[state.service];
     const first = String(d.get('name') || '').trim().split(/\s+/)[0];
     const event = { title: `${s.name} · Bramble & Basalt`, start: state.time, minutes: s.mins, location: s.onsite ? String(d.get('address') || '') : ADDRESS, details: 'Need to reschedule? Call or text (970) 555-0142.' };
+    d.append('service', s.name); d.append('when', `${fmtDate(state.time)} ${fmtTime(state.time)}`); d.append('with', state.staff);
+    if (!(await sendLead('booking-request', d))) { sendFailed(); return; }
     track('book_appointment', { service: state.service, value: s.price, currency: 'USD' });
     root.hidden = true;
     const done = $('#bk-done');

@@ -23,7 +23,8 @@
 <link rel="preload" href="assets/fonts/playfair-latin-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/style.css">
 <script>try{var q=location.search;if(/[?&]labels=on/.test(q)||(!/[?&]labels=off/.test(q)&&localStorage.getItem('bb-labels')==='true'))document.documentElement.classList.add('features-on')}catch(e){}</script>
-<!-- Live builds: GA4 gtag.js loads here with the client's measurement ID. -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-9CMP8DK83V"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-9CMP8DK83V');</script>
 </head>
 <body class="has-mobile-cta">
 <a class="skip-link" href="#main">Skip to main content</a>
@@ -122,7 +123,7 @@
   <div class="card p-6 md:p-7" data-feature="Online donations (Stripe, any amount)">
     <h2 class="title-2">Give to the fund</h2>
     <p class="muted mt-2">Every dollar buys soil, seeds and drip line for a school bed.</p>
-    <form class="mt-5 grid gap-4" data-pay="School Garden Fund donation" data-pay-line="Donation to the School Garden Fund" data-pay-category="donation">
+    <form class="mt-5 grid gap-4" data-pay="School Garden Fund donation" data-pay-key="donation" data-pay-line="Donation to the School Garden Fund" data-pay-category="donation">
       <fieldset><legend class="label">Amount</legend>
         <div class="mt-2 grid grid-cols-4 gap-2">
           <label class="choice justify-center py-3"><input type="radio" name="amount" value="25" class="sr-only"><b>$25</b></label>

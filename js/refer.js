@@ -28,5 +28,6 @@
       </div>`;
     $('#refer-h').focus();
     track('referral_created', { lead_source: window.BB.src });
+    window.BB.sendLead('referral-signup', { name: String(d.get('name')), email: String(d.get('email')), code });
   });
 })();

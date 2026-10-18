@@ -2,7 +2,7 @@
    Live builds hand the order to Square, Toast or Clover online ordering. */
 (() => {
   'use strict';
-  const { $, $$, esc, money, icon, toast, track, stripeDemo, HOURS, h12, denverNow } = window.BB;
+  const { $, $$, esc, money, icon, toast, track, stripeDemo, HOURS, h12, denverNow, sendLead, sendFailed } = window.BB;
   const menu = $('#menu');
   if (!menu) return;
 
@@ -74,6 +74,7 @@
       if (!paid) return;
     }
     const num = Math.floor(100 + Math.random() * 899);
+    if (!(await sendLead('cafe-order', { order: '#' + num, items: rows.map(r => `${r.qty} × ${r.name}`).join('; '), total: money(total), pickup: String(d.get('time')), name: String(d.get('name')), phone: String(d.get('phone')), paid_online: d.get('pay') === 'now' ? 'yes' : 'no' }))) { sendFailed(); return; }
     track('purchase', { transaction_id: 'CAFE-' + num, value: total, currency: 'USD', item_category: 'cafe' });
     form.hidden = true;
     const done = $('#order-done');

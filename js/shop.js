@@ -2,7 +2,7 @@
    Needs main.js (window.BB) and catalog.js (window.BB_CATALOG). */
 (() => {
   'use strict';
-  const { $, $$, esc, money, icon, store, toast, track, cart, stripeDemo } = window.BB;
+  const { $, $$, esc, money, icon, store, toast, track, cart, stripeDemo, payLink, sendLead } = window.BB;
   const CATALOG = window.BB_CATALOG || [];
   const CATS = window.BB_CATS || {};
   const byId = id => CATALOG.find(p => p.id === id);
@@ -97,6 +97,7 @@
               </div>
               <button type="submit" class="btn btn-primary btn-lg flex-1">${icon('cart')} Add to cart</button>
               <button type="button" class="btn btn-light btn-lg" data-wish="${p.id}" aria-pressed="false">${icon('heart', 'icon-sm fill-when-pressed')} Save</button>
+              ${variants.some((v, i) => payLink(`product-${p.id}-${i}`)) || payLink(`product-${p.id}-0`) ? `<button type="button" class="btn btn-dark btn-lg w-full" data-buy-now data-feature="Buy now: real Stripe test checkout">${icon('lock', 'icon-sm')} Buy now</button>` : ''}
             </div>
           </form>` : `
           <div id="notify" class="mt-6 rounded-2xl border border-sand-300 bg-white p-5" data-feature="Back-in-stock alerts">
@@ -139,6 +140,14 @@
       form.addEventListener('change', e => {
         if (e.target.name !== 'variant' || p.sale) return;
         $('#pd-price').innerHTML = `<span class="price">${money(priceOf(+e.target.value))}</span>`;
+      });
+      form.addEventListener('click', e => {
+        if (!e.target.closest('[data-buy-now]')) return;
+        const vi = +(new FormData(form).get('variant') || 0);
+        const link = payLink(`product-${p.id}-${vi}`) || payLink(`product-${p.id}-0`);
+        if (!link) return;
+        track('begin_checkout', { currency: 'USD', value: priceOf(vi), items: [{ item_id: p.id, item_name: p.name, item_variant: variants[vi] ? variants[vi][0] : '' }] });
+        location.href = link;
       });
       form.addEventListener('submit', e => {
         e.preventDefault();
@@ -294,6 +303,7 @@
 
     function confirm(items, t) {
       const order = 'BB-' + String(Math.floor(10000 + Math.random() * 89999));
+      sendLead('online-order', { order, items: items.map(i => `${i.qty} × ${i.name}${i.variant ? ' (' + i.variant + ')' : ''}`).join('; '), total: money(t.total), fulfillment: t.ship });
       track('purchase', { transaction_id: order, currency: 'USD', value: t.total, items: items.map(i => ({ item_id: i.id, item_name: i.name, price: i.price, quantity: i.qty })) });
       cart.clear(); store.set(OPTS, {});
       const next = { pickup: 'We’ll text you when it’s ready, usually within 2 hours. Pull into the pickup spots by the café and we’ll bring it out.', delivery: 'We’ll text you a delivery window for tomorrow. Bulk mulch is dumped where you point.', ship: 'You’ll get a tracking link by email within one business day.', none: 'Gift cards are on their way to the recipient’s inbox now.' }[t.ship];
@@ -338,6 +348,8 @@
       $('#gc-email').required = d.get('delivery') !== 'print';
       counter.textContent = `${msg.value.length}/200`;
     };
+    // "Buy now" only shows once a Stripe gift card link is configured.
+    if (!payLink('giftcard-custom') && ![25, 50, 100, 150].some(v => payLink('giftcard-' + v))) $$('[data-gc-buy]').forEach(b => { b.hidden = true; });
     gc.addEventListener('input', update);
     gc.addEventListener('change', update);
     gc.addEventListener('submit', e => {
@@ -348,6 +360,14 @@
       const design = { juniper: 'Juniper', mesa: 'Sunset mesa', wildflower: 'Wildflower' }[d.get('design')];
       const to = String(d.get('to') || '').trim() || 'recipient';
       const deliv = d.get('delivery') === 'print' ? 'print at home' : d.get('delivery') === 'schedule' ? `emails ${new Date(d.get('when') + 'T12:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : 'emails now';
+      const gl = payLink(`giftcard-${a}`) || payLink('giftcard-custom');
+      if (gl && e.submitter && e.submitter.hasAttribute('data-gc-buy')) {
+        sendLead('gift-card', { amount: money(a), design, to, from: String(d.get('from') || ''), recipient_email: String(d.get('email') || ''), message: String(d.get('message') || ''), delivery: deliv });
+        track('begin_checkout', { value: a, currency: 'USD', item_category: 'gift card' });
+        if (!payLink(`giftcard-${a}`)) toast(`Enter <b>${money(a)}</b> on the Stripe page.`);
+        setTimeout(() => { location.href = gl; }, payLink(`giftcard-${a}`) ? 0 : 900);
+        return;
+      }
       cart.add({ key: 'gc-' + Date.now(), unique: true, id: 'gift-card', name: `Gift card · ${money(a).replace('.00', '')}`, variant: `${design} design · to ${to} · ${deliv}`, price: a, qty: 1, img: 'assets/img/product-gift-card.svg', ship: 'digital', href: 'gift-cards.html' });
     });
     update();

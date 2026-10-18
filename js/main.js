@@ -17,6 +17,19 @@
     set(k, v) { mem[k] = v; try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* memory only */ } },
   };
 
+  /* ---------------------------------------------------- live services -- */
+  // Fill these in to switch each integration on. Anything left empty stays in
+  // demo mode, so the site always works. Only public IDs and links go here:
+  // never a Stripe secret key.
+  const CONFIG = {
+    ga4: 'G-9CMP8DK83V',  // loaded in <head> on every page
+    formspree: '',        // the ID from https://formspree.io/f/<id>
+    cal: { user: '', events: { estimate: '', design: '', blowout: '', lawn: '', shop: '' } },
+    // Stripe test-mode Payment Links, keyed by what they sell.
+    stripe: {},
+  };
+  const payLink = key => (CONFIG.stripe && CONFIG.stripe[key]) || '';
+
   /* ------------------------------------------------------------ toasts -- */
   const region = $('#toasts');
   function toast(html, { href, label, ga = false, ms = 4200 } = {}) {
@@ -33,8 +46,8 @@
   // is sent as an event so the owner can see which pages bring in work.
   window.dataLayer = window.dataLayer || [];
   function track(name, params = {}) {
-    window.dataLayer.push({ event: name, ...params });
     if (typeof window.gtag === 'function') window.gtag('event', name, params);
+    else window.dataLayer.push({ event: name, ...params });
     if (document.documentElement.classList.contains('features-on')) {
       toast(`${icon('chart', 'icon-sm')} GA4 event sent: <code>${esc(name)}</code>`, { ga: true });
     }
@@ -342,12 +355,29 @@
     window.addEventListener('load', () => navigator.serviceWorker.register(ROOT + 'sw.js').catch(() => {}));
   }
 
-  /* ------------------------------------------------------- demo forms -- */
-  // Live builds POST to Formspree with fetch(form.action, { method: 'POST',
-  // body: new FormData(form), headers: { Accept: 'application/json' } }).
-  // In the demo nothing leaves the browser; the confirmation state is real.
+  /* ------------------------------------------------------------ forms -- */
+  // With CONFIG.formspree set, every form lands in the business inbox through
+  // Formspree. File uploads need a paid Formspree plan, so files are listed by
+  // name instead. Without it, nothing leaves the browser.
+  async function sendLead(name, data) {
+    if (!CONFIG.formspree) return true;
+    const fd = data instanceof FormData ? data : Object.entries(data).reduce((x, [k, v]) => { x.append(k, v); return x; }, new FormData());
+    const files = [];
+    for (const [k, v] of [...fd.entries()]) if (v instanceof File) { if (v.name) files.push(v.name); fd.delete(k); }
+    if (files.length) fd.append('files_named', files.join(', '));
+    fd.append('form_name', name);
+    fd.append('_subject', `Demo site: ${name.replace(/-/g, ' ')}`);
+    if (!fd.has('lead_source')) fd.append('lead_source', src);
+    if (!fd.has('page')) fd.append('page', location.pathname);
+    try {
+      const r = await fetch(`https://formspree.io/f/${CONFIG.formspree}`, { method: 'POST', body: fd, headers: { Accept: 'application/json' } });
+      return r.ok;
+    } catch { return false; }
+  }
+  const sendFailed = () => toast(`That didn't go through. Please try again, or call <a href="tel:+19705550142">(970) 555-0142</a>.`, { ms: 9000 });
+
   $$('form[data-demo-form]').forEach(form => {
-    form.addEventListener('submit', e => {
+    form.addEventListener('submit', async e => {
       e.preventDefault();
       for (const f of $$('input[type="file"][data-max-mb]', form)) {
         const max = Number(f.dataset.maxMb) * 1048576;
@@ -355,8 +385,13 @@
         if (big) { toast(`${esc(big.name)} is over ${f.dataset.maxMb} MB. Try a smaller file.`); f.focus(); return; }
       }
       if (html.classList.contains('features-on')) toast(`${icon('chart', 'icon-sm')} Lead source attached: <code>${esc(src)}</code>`, { ga: true });
-      if (form.dataset.redirect) { track(form.dataset.event || 'generate_lead', { form_name: form.dataset.demoForm, lead_source: src }); location.href = ROOT + form.dataset.redirect; return; }
       const data = new FormData(form);
+      const btn = form.querySelector('[type="submit"]'), label = btn && btn.innerHTML;
+      if (CONFIG.formspree && btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+      const sent = await sendLead(form.dataset.demoForm, new FormData(form));
+      if (btn) { btn.disabled = false; btn.innerHTML = label; }
+      if (!sent) { sendFailed(); return; }
+      if (form.dataset.redirect) { track(form.dataset.event || 'generate_lead', { form_name: form.dataset.demoForm, lead_source: src }); location.href = ROOT + form.dataset.redirect; return; }
       const first = String(data.get('name') || data.get('first') || '').trim().split(/\s+/)[0];
       const ok = form.dataset.success ? document.getElementById(form.dataset.success) : form.parentElement.querySelector('[data-form-success]');
       if (ok) {
@@ -460,6 +495,8 @@
     const season = $('[data-billing="season"]')?.getAttribute('aria-pressed') === 'true';
     const monthly = +b.dataset.planPrice;
     const total = season ? Math.round(monthly * 8 * 0.9) : monthly;
+    const link = payLink(`plan-${b.dataset.plan.toLowerCase().replace(/\W+/g, '-')}-${season ? 'season' : 'monthly'}`);
+    if (link) { track('begin_checkout', { value: total, currency: 'USD', item_category: 'subscription', item_name: b.dataset.plan }); location.href = link; return; }
     const paid = await stripeDemo({
       title: `${b.dataset.plan} yard care plan`,
       lines: [{ label: season ? `${b.dataset.plan}, April–November, prepaid (10% off)` : `${b.dataset.plan}, first month`, amount: total }],
@@ -506,6 +543,8 @@
     const d = new FormData(f);
     const amt = Math.round(+(d.get('amount') === 'custom' ? d.get('custom') : d.get('amount')) * 100) / 100;
     if (!(amt >= 1)) { toast('Enter an amount of at least $1.'); return; }
+    const link = f.dataset.payKey && payLink(f.dataset.payKey);
+    if (link) { track('begin_checkout', { value: amt, currency: 'USD', item_category: f.dataset.payCategory || 'payment' }); toast(`Enter <b>${money(amt)}</b> on the Stripe page.`); setTimeout(() => { location.href = link; }, 900); return; }
     const paid = await stripeDemo({ title: f.dataset.pay, lines: [{ label: f.dataset.payLine || f.dataset.pay, amount: amt }], total: amt, note: f.dataset.payNote || '' });
     if (!paid) return;
     track('purchase', { value: amt, currency: 'USD', item_category: f.dataset.payCategory || 'payment' });
@@ -551,5 +590,5 @@
     if (c) { try { await navigator.clipboard.writeText(c.dataset.copy); toast(`Copied <b>${esc(c.dataset.copy)}</b>`); } catch { toast(`Code: <b>${esc(c.dataset.copy)}</b>`); } }
   });
 
-  window.BB = { $, $$, esc, money, icon, store, toast, track, cart, stripeDemo, openDialog, ics, gcal, fmtDate, fmtTime, ROOT, HOURS, h12, denverNow, paintWish, src, evalCond, openState, countdowns };
+  window.BB = { $, $$, esc, money, icon, store, toast, track, cart, stripeDemo, openDialog, ics, gcal, fmtDate, fmtTime, ROOT, HOURS, h12, denverNow, paintWish, src, evalCond, openState, countdowns, CONFIG, payLink, sendLead, sendFailed };
 })();
