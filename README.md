@@ -30,7 +30,18 @@ no framework, no `package.json`. Every page is `noindex` so it never shows up in
      flyer lead with the flyer's tracking number.
    - `index.html?ref=MARIA50` shows what a referred friend sees.
 
-Nothing leaves the browser: no form is submitted and no card is charged.
+No card is ever charged. What's live is set in the `CONFIG` block at the top of
+`js/main.js`; anything left empty there stays in demo mode:
+
+| Service | Status | Account |
+|---|---|---|
+| GA4 | Live, `G-9CMP8DK83V` | "Bramble & Basalt demo site" property in the Bookcliff Web Analytics account |
+| Cal.com | Live: the booking page embeds the real calendar | `cal.com/demo-bcw`, the separate demo login |
+| Formspree | Not yet: forms show a confirmation, nothing is sent | — |
+| Stripe | Not yet: checkout opens the demo dialog | — |
+
+Bookings made on the demo land in the `demo-bcw` Cal.com account and email the address
+the visitor typed, so book with your own email when you show it.
 
 ## Preview locally
 
@@ -61,14 +72,14 @@ redeploys in about a minute.
 |---|---|
 | Forms show a confirmation, nothing is sent | Formspree (`action` is already on the main forms); every form carries lead-source fields |
 | “Secure checkout powered by Stripe · demo mode” dialog | Stripe Payment Links or hosted Checkout, publishable key only |
-| Booking calendar with generated open times | Cal.com or Calendly embed, lazy-loaded |
+| Booking calendar (live Cal.com embed; generated open times if `CONFIG.cal` is empty) | The client's Cal.com or Calendly, lazy-loaded |
 | Estimate approval, waiver signatures | Documenso, DocuSign or Dropbox Sign for legally tracked signatures |
 | Chat assistant with scripted answers | HubSpot, Tidio or Crisp live chat, or an AI assistant |
 | Phone number swap for ad visitors | CallRail (or similar) dynamic number insertion |
 | Café order-ahead | Square, Toast or Clover online ordering |
 | Gift card balance, order tracking | The shop's point-of-sale / order system |
 | Client portal | A sign-in-by-email portal plus Stripe's customer billing portal |
-| GA4 events go to `window.dataLayer` | Add gtag.js in `<head>` with the client's ID; `BB.track()` already fires every event |
+| GA4 events go to the demo property | gtag.js in `<head>` with the client's ID; `BB.track()` already fires every event |
 | Reviews marked “Sample” | The client's real Google reviews (never invented) |
 | SVG illustrations | The client's own photos (WebP/AVIF with JPEG fallback) |
 | Phone (970) 555-0142, `.example` email and domain | The client's real NAP, matching their Google Business Profile |

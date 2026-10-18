@@ -24,7 +24,8 @@
   const CONFIG = {
     ga4: 'G-9CMP8DK83V',  // loaded in <head> on every page
     formspree: '',        // the ID from https://formspree.io/f/<id>
-    cal: { user: '', events: { estimate: '', design: '', blowout: '', lawn: '', shop: '' } },
+    // cal.com/demo-bcw: booking type slugs keyed by the service radios on book.html
+    cal: { user: 'demo-bcw', events: { estimate: 'estimate', design: 'design', blowout: 'blowout', lawn: 'lawn', shop: 'shop' } },
     // Stripe test-mode Payment Links, keyed by what they sell.
     stripe: {},
   };

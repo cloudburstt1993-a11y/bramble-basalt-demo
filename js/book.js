@@ -67,7 +67,7 @@
     const box = $('#bk-live');
     box.hidden = false;
     $('#cal-inline').innerHTML = '';
-    window.Cal.ns.bb('inline', { elementOrSelector: '#cal-inline', calLink: `${CAL.user}/${slug}`, config: { layout: 'month_view' } });
+    window.Cal.ns.bb('inline', { elementOrSelector: '#cal-inline', calLink: `${CAL.user}/${slug}`, config: { layout: 'month_view', theme: 'light' } });
     track('booking_calendar_opened', { service });
     return true;
   }
