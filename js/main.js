@@ -565,6 +565,16 @@
     });
   });
 
+  // Deep links: faq.html#warranty (from site search or a shared link) opens that answer.
+  const openFromHash = () => {
+    let id = '';
+    try { id = decodeURIComponent(location.hash.slice(1)); } catch { return; }
+    const d = id && document.getElementById(id);
+    if (d instanceof HTMLDetailsElement) d.open = true;
+  };
+  openFromHash();
+  window.addEventListener('hashchange', openFromHash);
+
   /* ------------------------------------------------- generic filters -- */
   // <div data-filter-group="gallery"> <button class="pill" data-filter="all"> …
   // items: [data-filter-items="gallery"] > [data-tags="patio lighting"]

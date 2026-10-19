@@ -83,7 +83,7 @@
         <div>
           <p class="eyebrow">${CATS[p.cat]}</p>
           <h1 class="title-2 mt-2">${esc(p.name)}</h1>
-          <p class="mt-3 flex items-center gap-2 text-sm"><span class="stars" aria-hidden="true">${icon('star').repeat(5)}</span><a href="#reviews" class="link">Customer reviews</a> <span class="sample-tag">Sample</span></p>
+          <p class="mt-3 flex items-center gap-2 text-sm"><span class="stars" role="img" aria-label="Sample rating, 5 out of 5">${icon('star').repeat(5)}</span><a href="#reviews" class="link">Customer reviews</a> <span class="sample-tag">Sample</span></p>
           <p class="mt-4 text-2xl" id="pd-price">${p.sale ? `<span class="price price-sale">${money(p.sale)}</span> <span class="price-was text-lg">${money(p.price)}</span>` : `<span class="price">${money(priceOf(0))}</span>`}</p>
           <p class="lead mt-4">${esc(p.short)}</p>
           <div class="mt-3 flex flex-wrap gap-1.5">${window.bbBadgeHTML({ badges: p.badges })}</div>

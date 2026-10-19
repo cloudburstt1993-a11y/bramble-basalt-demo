@@ -40,6 +40,7 @@
   --color-sun-200: #f8e2a8;
   --color-sun-300: #f3cf73;
   --color-sun-400: #ecb94a;
+  --color-sun-700: #9a6a12; /* star outlines: 4.7:1 on white, 4.2:1 on sand-100 */
 
   --color-sand-50: #fcfaf5;
   --color-sand-100: #f6f0e4;
@@ -50,8 +51,8 @@
   --color-danger-50: #fcecea;
   --color-danger-700: #a3312a;
 
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-sans: "Inter", "Inter Fallback", "Inter Fallback Roboto", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Playfair Display", "Playfair Fallback", "Playfair Fallback Noto", Georgia, "Times New Roman", serif;
 
   --shadow-card: 0 1px 2px rgb(18 25 23 / 0.06), 0 10px 30px -14px rgb(18 25 23 / 0.22);
   --shadow-lift: 0 2px 4px rgb(18 25 23 / 0.08), 0 22px 44px -18px rgb(18 25 23 / 0.35);
@@ -77,6 +78,41 @@
     font-style: normal;
     font-display: swap;
     unicode-range: U+0020-007E, U+00A0-00FF, U+2013-2014, U+2018-201A, U+201C-201E, U+2022, U+2026, U+2032-2033, U+2039-203A, U+20AC, U+2122, U+2190, U+2192, U+2212;
+  }
+  /* Metric-matched stand-ins, shown until the web fonts arrive, so the swap doesn't
+     re-wrap the h1. size-adjust is the web font's average advance over the site's own
+     text divided by the local font's; the overrides are the web font's hhea metrics
+     divided by size-adjust. Arial and Georgia cover Windows, macOS and iOS; Roboto and
+     Noto Serif cover Android. A missing local font just skips to the next family. */
+  @font-face {
+    font-family: "Inter Fallback";
+    src: local("Arial"), local("ArialMT");
+    font-weight: 100 500;
+    size-adjust: 106.3%; ascent-override: 91.13%; descent-override: 22.69%; line-gap-override: 0%;
+  }
+  @font-face {
+    font-family: "Inter Fallback";
+    src: local("Arial Bold"), local("Arial-BoldMT");
+    font-weight: 600 900;
+    size-adjust: 101%; ascent-override: 95.92%; descent-override: 23.88%; line-gap-override: 0%;
+  }
+  @font-face {
+    font-family: "Inter Fallback Roboto";
+    src: local("Roboto"), local("Roboto Regular"), local("Roboto-Regular");
+    font-weight: 100 900;
+    size-adjust: 107.09%; ascent-override: 90.46%; descent-override: 22.52%; line-gap-override: 0%;
+  }
+  @font-face {
+    font-family: "Playfair Fallback";
+    src: local("Georgia Bold"), local("Georgia-Bold");
+    font-weight: 600 700;
+    size-adjust: 90.05%; ascent-override: 120.15%; descent-override: 27.87%; line-gap-override: 0%;
+  }
+  @font-face {
+    font-family: "Playfair Fallback Noto";
+    src: local("Noto Serif Bold"), local("NotoSerif-Bold");
+    font-weight: 600 700;
+    size-adjust: 91.47%; ascent-override: 118.29%; descent-override: 27.44%; line-gap-override: 0%;
   }
 
   html {
@@ -234,7 +270,8 @@
   .price-was { color: var(--color-basalt-600); text-decoration: line-through; font-weight: 400; }
   .price-sale { color: var(--color-clay-700); }
   .stars { display: inline-flex; gap: 1px; color: var(--color-sun-400); }
-  .stars svg { width: 1rem; height: 1rem; }
+  /* sun-400 alone is 1.8:1 on white; the darker outline carries the 3:1 the shape needs. */
+  .stars svg { width: 1rem; height: 1rem; stroke: var(--color-sun-700); stroke-width: 2; stroke-linejoin: round; }
 
   .skip-link { position: absolute; left: .75rem; top: -4rem; z-index: 100; background: var(--color-basalt-950); color: var(--color-white); padding: .75rem 1rem; border-radius: .5rem; font-weight: 600; }
   .skip-link:focus { top: .75rem; }
