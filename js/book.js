@@ -58,24 +58,50 @@
     calReady = true;
     return window.Cal;
   }
+  // Open the connection to Cal.com as soon as a visitor heads for the service picker.
+  let warmed = false;
+  const warm = () => {
+    if (warmed || !live) return;
+    warmed = true;
+    document.head.append(Object.assign(document.createElement('link'), { rel: 'preconnect', href: 'https://app.cal.com' }));
+  };
+  ['pointerdown', 'focusin'].forEach(t => $('#booking')?.addEventListener(t, warm, { once: true }));
+
+  let calTimer = 0;
   function showLive(service) {
     const slug = CAL.events[service];
     if (!slug) return false;
     calLoad();
     $$('#booking > div > section:not(:first-child)').forEach(s => { s.hidden = true; });
     $('#booking aside').hidden = true;
-    const box = $('#bk-live');
+    const box = $('#bk-live'), host = $('#cal-inline');
     box.hidden = false;
-    $('#cal-inline').innerHTML = '';
+    host.innerHTML = '';
     window.Cal.ns.bb('inline', { elementOrSelector: '#cal-inline', calLink: `${CAL.user}/${slug}`, config: { layout: 'month_view', theme: 'light' } });
+    $('#bk-live-status').textContent = `${SERVICES[service].name}: calendar loading below. Choose a day and time.`;
+    box.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    // Name Cal's frame for screen readers, and offer the phone if it never loads.
+    clearInterval(calTimer);
+    let n = 0;
+    calTimer = setInterval(() => {
+      const f = host.querySelector('iframe');
+      if (f) { f.title = `Book: ${SERVICES[service].name}`; clearInterval(calTimer); return; }
+      if (++n === 40) {
+        clearInterval(calTimer);
+        host.innerHTML = `<p class="error-text p-4" role="alert">The calendar didn't load. Call <a class="link" href="tel:+19705550142">(970) 555-0142</a> and we'll book you over the phone.</p>`;
+      }
+    }, 250);
     track('booking_calendar_opened', { service });
     return true;
   }
 
   /* ---- step 1: service ---- */
+  // Arrow keys move through the radios one change at a time, so the live
+  // calendar waits until the choice settles instead of reloading on each step.
+  let pick = 0;
   $$('input[name="service"]', root).forEach(r => r.addEventListener('change', () => {
     state.service = r.value; state.staff = 'any'; state.time = null;
-    if (live && showLive(r.value)) return;
+    if (live && CAL.events[r.value]) { clearTimeout(pick); pick = setTimeout(() => showLive(r.value), 400); return; }
     renderStaff(); renderCal(); renderSlots(); renderSummary();
     $('[name="address"]', root).closest('.field').hidden = !SERVICES[r.value].onsite;
     $('[name="address"]', root).required = SERVICES[r.value].onsite;
@@ -164,7 +190,7 @@
     const first = String(d.get('name') || '').trim().split(/\s+/)[0];
     const event = { title: `${s.name} · Bramble & Basalt`, start: state.time, minutes: s.mins, location: s.onsite ? String(d.get('address') || '') : ADDRESS, details: 'Need to reschedule? Call or text (970) 555-0142.' };
     d.append('service', s.name); d.append('when', `${fmtDate(state.time)} ${fmtTime(state.time)}`); d.append('with', state.staff);
-    if (!(await sendLead('booking-request', d))) { sendFailed(); return; }
+    if (!(await sendLead('booking-request', d))) { sendFailed(e.target); return; }
     track('book_appointment', { service: state.service, value: s.price, currency: 'USD' });
     root.hidden = true;
     const done = $('#bk-done');

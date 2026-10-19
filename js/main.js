@@ -26,8 +26,51 @@
     formspree: 'mkjoevop', // https://formspree.io/f/<id>, in the demo Formspree login
     // cal.com/demo-bcw: booking type slugs keyed by the service radios on book.html
     cal: { user: 'demo-bcw', events: { estimate: 'estimate', design: 'design', blowout: 'blowout', lawn: 'lawn', shop: 'shop' } },
-    // Stripe test-mode Payment Links, keyed by what they sell.
-    stripe: {},
+    // Stripe Payment Links in the "Bramble & Basalt demo" sandbox (test mode, no
+    // real charges), keyed by what they sell. Each redirects to
+    // thank-you.html?form=paid&item=<key>.
+    stripe: Object.fromEntries(Object.entries({
+      'product-blue-grama-0': '14A7sNedzeyR1DV5I3co000',
+      'product-blue-grama-1': '5kQ6oJedz9exgyPb2nco001',
+      'product-hens-chicks-0': 'eVq4gBc5rbmFeqHb2nco002',
+      'product-apache-plume-0': '9B6aEZedzcqJ0zR9Yjco003',
+      'product-penstemon-0': '5kQ28tfhD8at0zRgmHco004',
+      'product-lavender-0': '4gM9AVedzfCV3M32vRco005',
+      'product-potting-mix-0': '00w14p5H3gGZfuLb2nco006',
+      'product-cedar-mulch-0': '7sY4gBfhD8at6Yfeezco007',
+      'product-basalt-planter-0': 'aFa14p3yV2Q9dmDeezco008',
+      'product-basalt-planter-1': 'cNiaEZb1n4Yhbev7Qbco009',
+      'product-basalt-planter-2': '6oUcN7d9vgGZ82j7Qbco00a',
+      'product-terracotta-bowl-0': '9B69AV3yVgGZ3M38Ufco00b',
+      'product-hori-hori-0': '4gMaEZ2uRduN82j0nJco00c',
+      'product-gloves-0': 'bJe00lc5r76pgyPfiDco00d',
+      'product-gloves-1': 'dRm9AV5H39ex1DVc6rco00e',
+      'product-gloves-2': '4gM00l2uR4YhfuL2vRco00f',
+      'product-watering-can-0': '4gM28tb1n0I14Q72vRco00g',
+      'product-wildflower-seed-0': 'dRm6oJ4CZcqJ82jeezco00h',
+      'product-house-coffee-0': '28E4gB7PbaiBfuL8Ufco00i',
+      'product-house-coffee-1': '8x23cx3yVaiB96n3zVco00j',
+      'product-trucker-cap-0': '14A5kF8Tf2Q9gyPeezco00k',
+      'plan-tidy-monthly': '4gM7sN2uR76p82j2vRco00l',
+      'plan-full-care-monthly': '9B6eVf9Xj3Ud3M3davco00m',
+      'plan-estate-monthly': 'aFadRb1qNfCV6Yfb2nco00n',
+      'plan-tidy-season': '7sYcN70mJ4Yh1DV4DZco00o',
+      'plan-full-care-season': 'fZu8wR6L7aiBaargmHco00p',
+      'plan-estate-season': 'bJe5kF8TfduN96n5I3co00q',
+      'event-bulbs': '14AaEZc5rfCV2HZ0nJco00r',
+      'event-sprouts': 'dRmaEZd9v9exeqH9Yjco00s',
+      'event-wreath': '5kQ14p8Tf9ex96n1rNco00t',
+      'event-pruning': 'dRmdRb2uReyR2HZ4DZco00u',
+      'event-seeds': '00w4gB5H32Q90zRfiDco00v',
+      'giftcard-25': '5kQ6oJc5rcqJ82jb2nco00w',
+      'giftcard-50': '3cIaEZc5r0I1gyP7Qbco00x',
+      'giftcard-100': '5kQ7sN4CZ4Yh0zR9Yjco00y',
+      'giftcard-150': 'cNi5kFd9v4Yh82jeezco00z',
+      'giftcard-custom': '14AaEZb1ncqJ0zReezco00A',
+      'invoice': '7sYcN77PbgGZdmDgmHco00B',
+    }).map(([k, id]) => [k, `https://buy.stripe.com/test_${id}`]).concat([
+      ['donation', 'https://donate.stripe.com/test_8x26oJ8TfduNbev5I3co00C'],
+    ])),
   };
   const payLink = key => (CONFIG.stripe && CONFIG.stripe[key]) || '';
 
@@ -201,6 +244,36 @@
     });
   }
 
+  // Hands off to a real Stripe Payment Link. When the visitor has to type
+  // something on Stripe's page (a custom amount, an invoice number), the note
+  // stays up until they choose to continue instead of flashing past.
+  function toStripe(link, { title = 'Checkout', note = '', email = '', ref = '' } = {}) {
+    const u = new URL(link);
+    if (email) u.searchParams.set('prefilled_email', String(email).trim());
+    if (ref) u.searchParams.set('client_reference_id', String(ref).replace(/[^\w-]/g, '').slice(0, 200));
+    if (!note) { location.href = u.href; return; }
+    let d = $('#stripe-demo');
+    if (!d) {
+      d = document.createElement('dialog');
+      d.id = 'stripe-demo';
+      d.className = 'dialog';
+      d.setAttribute('aria-labelledby', 'sd-title');
+      document.body.append(d);
+    }
+    d.innerHTML = `
+      <div class="stripe-bar">${icon('lock', 'icon-sm')} Secure checkout on Stripe · test mode</div>
+      <div class="dialog-body">
+        <h2 id="sd-title" class="title-3">${esc(title)}</h2>
+        <p class="mt-3">${note}</p>
+        <p class="help mt-2">Stripe's page opens in this tab. It's a test sandbox, so no real card is charged.</p>
+        <div class="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <a class="btn btn-primary" href="${esc(u.href)}">${icon('lock', 'icon-sm')} Continue to Stripe</a>
+          <button type="button" class="btn btn-light" data-dialog-close>Cancel</button>
+        </div>
+      </div>`;
+    openDialog(d);
+  }
+
   /* ------------------------------------------------ calendar helpers -- */
   const pad = v => String(v).padStart(2, '0');
   const stamp = d => `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
@@ -277,8 +350,8 @@
   const DNI = { google: ['+19705550187', '(970) 555-0187'], facebook: ['+19705550163', '(970) 555-0163'], flyer: ['+19705550171', '(970) 555-0171'] };
   const dni = DNI[src.split(' / ')[0]];
   if (dni) {
-    $$('a[href="tel:+19705550142"]').forEach(a => {
-      a.href = 'tel:' + dni[0];
+    $$('a[href="tel:+19705550142"], a[href^="sms:+19705550142"]').forEach(a => {
+      a.href = a.getAttribute('href').replace('+19705550142', dni[0]);
       const w = document.createTreeWalker(a, NodeFilter.SHOW_TEXT);
       while (w.nextNode()) w.currentNode.textContent = w.currentNode.textContent.replace('(970) 555-0142', dni[1]);
     });
@@ -333,7 +406,9 @@
     if (c) {
       store.set('bb-consent', c.dataset.consent);
       c.closest('.consent').remove();
-      toast(c.dataset.consent === 'all' ? 'Analytics allowed. On a live site GA4 loads now.' : 'Declined. Analytics stays off for this visitor.');
+      if (c.dataset.consent === 'all') window.bbLoadGA?.();
+      else if (typeof window.gtag === 'function') window.gtag('consent', 'update', { analytics_storage: 'denied' });
+      toast(c.dataset.consent === 'all' ? 'Analytics allowed. GA4 is on for this visitor.' : 'Declined. Analytics stays off for this visitor.');
     }
   });
   function showConsent() {
@@ -379,7 +454,23 @@
       return r.ok;
     } catch { return false; }
   }
-  const sendFailed = () => toast(`That didn't go through. Please try again, or call <a href="tel:+19705550142">(970) 555-0142</a>.`, { ms: 9000 });
+  const FAIL = `That didn't go through. Please try again, or call <a href="tel:+19705550142">(970) 555-0142</a>.`;
+  function sendFailed(form) {
+    form = form || $('dialog[open] form:not([hidden])');
+    if (!form) { toast(FAIL, { ms: 15000 }); return; }
+    let box = $('[data-form-error]', form);
+    if (!box) {
+      box = document.createElement('p');
+      box.dataset.formError = '';
+      box.className = 'error-text sm:col-span-2';
+      box.setAttribute('role', 'alert');
+      form.append(box);
+    }
+    box.textContent = '';
+    setTimeout(() => { box.innerHTML = FAIL; }, 50); // filled after insert so it is announced
+  }
+  // A new attempt clears the last failure message.
+  document.addEventListener('submit', e => { $('[data-form-error]', e.target)?.remove(); }, true);
 
   $$('form[data-demo-form]').forEach(form => {
     form.addEventListener('submit', async e => {
@@ -392,10 +483,11 @@
       if (html.classList.contains('features-on')) toast(`${icon('chart', 'icon-sm')} Lead source attached: <code>${esc(src)}</code>`, { ga: true });
       const data = new FormData(form);
       const btn = form.querySelector('[type="submit"]'), label = btn && btn.innerHTML;
-      if (CONFIG.formspree && btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+      if (btn?.getAttribute('aria-disabled') === 'true') return;
+      if (CONFIG.formspree && btn) { btn.setAttribute('aria-disabled', 'true'); btn.textContent = 'Sending…'; }
       const sent = await sendLead(form.dataset.demoForm, new FormData(form));
-      if (btn) { btn.disabled = false; btn.innerHTML = label; }
-      if (!sent) { sendFailed(); return; }
+      if (btn) { btn.removeAttribute('aria-disabled'); btn.innerHTML = label; }
+      if (!sent) { sendFailed(form); return; }
       if (form.dataset.redirect) { track(form.dataset.event || 'generate_lead', { form_name: form.dataset.demoForm, lead_source: src }); location.href = ROOT + form.dataset.redirect; return; }
       const first = String(data.get('name') || data.get('first') || '').trim().split(/\s+/)[0];
       const ok = form.dataset.success ? document.getElementById(form.dataset.success) : form.parentElement.querySelector('[data-form-success]');
@@ -442,6 +534,7 @@
       f.className = 'h-full w-full border-0';
       f.loading = 'lazy';
       m.replaceWith(f);
+      f.focus();
     }
   });
 
@@ -549,7 +642,7 @@
     const amt = Math.round(+(d.get('amount') === 'custom' ? d.get('custom') : d.get('amount')) * 100) / 100;
     if (!(amt >= 1)) { toast('Enter an amount of at least $1.'); return; }
     const link = f.dataset.payKey && payLink(f.dataset.payKey);
-    if (link) { track('begin_checkout', { value: amt, currency: 'USD', item_category: f.dataset.payCategory || 'payment' }); toast(`Enter <b>${money(amt)}</b> on the Stripe page.`); setTimeout(() => { location.href = link; }, 900); return; }
+    if (link) { track('begin_checkout', { value: amt, currency: 'USD', item_category: f.dataset.payCategory || 'payment' }); toStripe(link, { title: f.dataset.pay, note: `Enter <b>${money(amt)}</b> as the amount on Stripe's page.`, email: d.get('email') || '' }); return; }
     const paid = await stripeDemo({ title: f.dataset.pay, lines: [{ label: f.dataset.payLine || f.dataset.pay, amount: amt }], total: amt, note: f.dataset.payNote || '' });
     if (!paid) return;
     track('purchase', { value: amt, currency: 'USD', item_category: f.dataset.payCategory || 'payment' });
@@ -577,11 +670,13 @@
   const thanks = $('#thanks-root');
   if (thanks) {
     const from = new URLSearchParams(location.search).get('form') || 'contact';
-    const T = { 'fall-reset': ['Your Fall Yard Reset is requested.', 'We’ll text within one business day to lock in your date.'], contact: ['Your message is in.', 'We reply within one business day, usually much sooner.'], paid: ['Payment received. Thank you!', 'This was a Stripe test payment, so no real card was charged.'] }[from] || ['Thanks, you’re all set.', 'We’ll be in touch within one business day.'];
+    const MSG = { 'fall-reset': ['Your Fall Yard Reset is requested.', 'We’ll text within one business day to lock in your date.'], contact: ['Your message is in.', 'We reply within one business day, usually much sooner.'], paid: ['Payment received. Thank you!', 'This was a Stripe test payment, so no real card was charged.'] };
+    const T = Object.hasOwn(MSG, from) ? MSG[from] : ['Thanks, you’re all set.', 'We’ll be in touch within one business day.'];
     $('[data-thanks-title]', thanks).textContent = T[0];
     $('[data-thanks-sub]', thanks).textContent = T[1];
     track('thank_you_view', { form_name: from });
     // Stripe Payment Links redirect here with ?form=paid&item=<CONFIG.stripe key>.
+    if (from === 'paid') $('[data-thanks-steps]', thanks)?.setAttribute('hidden', '');
     if (from === 'paid') track('purchase', { currency: 'USD', item_name: new URLSearchParams(location.search).get('item') || '' });
   }
 
@@ -597,5 +692,5 @@
     if (c) { try { await navigator.clipboard.writeText(c.dataset.copy); toast(`Copied <b>${esc(c.dataset.copy)}</b>`); } catch { toast(`Code: <b>${esc(c.dataset.copy)}</b>`); } }
   });
 
-  window.BB = { $, $$, esc, money, icon, store, toast, track, cart, stripeDemo, openDialog, ics, gcal, fmtDate, fmtTime, ROOT, HOURS, h12, denverNow, paintWish, src, evalCond, openState, countdowns, CONFIG, payLink, sendLead, sendFailed };
+  window.BB = { $, $$, esc, money, icon, store, toast, track, cart, stripeDemo, openDialog, ics, gcal, fmtDate, fmtTime, ROOT, HOURS, h12, denverNow, paintWish, src, evalCond, openState, countdowns, CONFIG, payLink, toStripe, sendLead, sendFailed };
 })();

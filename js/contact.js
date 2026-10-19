@@ -1,7 +1,7 @@
 /* Bramble & Basalt demo: contact page tools: topic prefill, invoice payment, order tracking. */
 (() => {
   'use strict';
-  const { $, esc, money, icon, track, stripeDemo, payLink, sendLead, toast } = window.BB;
+  const { $, esc, money, icon, track, stripeDemo, payLink, toStripe, sendLead, sendFailed } = window.BB;
 
   const topic = new URLSearchParams(location.search).get('topic');
   const sel = $('#ct-topic');
@@ -11,7 +11,12 @@
   pay?.addEventListener('submit', async e => {
     e.preventDefault();
     const d = new FormData(pay), inv = String(d.get('invoice')).trim().toUpperCase(), amt = Math.round(+d.get('amount') * 100) / 100;
-    if (payLink('invoice')) { sendLead('invoice-payment', { invoice: inv, amount: money(amt), email: String(d.get('email')) }); track('begin_checkout', { value: amt, currency: 'USD', item_category: 'invoice' }); toast(`Enter <b>${money(amt)}</b> and invoice <b>${esc(inv)}</b> on the Stripe page.`, { ms: 6000 }); setTimeout(() => { location.href = payLink('invoice'); }, 1200); return; }
+    if (payLink('invoice')) {
+      if (!(await sendLead('invoice-payment', { invoice: inv, amount: money(amt), email: String(d.get('email')) }))) { sendFailed(pay); return; }
+      track('begin_checkout', { value: amt, currency: 'USD', item_category: 'invoice' });
+      toStripe(payLink('invoice'), { title: `Invoice ${inv}`, note: `Enter <b>${money(amt)}</b> as the amount and <b>${esc(inv)}</b> as the invoice number on Stripe's page.`, email: d.get('email'), ref: inv });
+      return;
+    }
     const paid = await stripeDemo({ title: `Invoice ${inv}`, lines: [{ label: `Invoice ${inv}`, amount: amt }], total: amt });
     if (!paid) return;
     track('purchase', { transaction_id: inv, value: amt, currency: 'USD', item_category: 'invoice' });

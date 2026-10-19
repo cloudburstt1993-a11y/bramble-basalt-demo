@@ -23,8 +23,7 @@
 <link rel="preload" href="assets/fonts/playfair-latin-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/style.css">
 <script>try{var q=location.search;if(/[?&]labels=on/.test(q)||(!/[?&]labels=off/.test(q)&&localStorage.getItem('bb-labels')==='true'))document.documentElement.classList.add('features-on')}catch(e){}</script>
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-9CMP8DK83V"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-9CMP8DK83V');</script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-9CMP8DK83V');window.bbLoadGA=function(){if(window.bbGA)return;window.bbGA=1;var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-9CMP8DK83V';document.head.appendChild(s)};addEventListener('load',function(){try{if(localStorage.getItem('bb-consent')==='"none"')return}catch(e){}(window.requestIdleCallback||setTimeout)(bbLoadGA,{timeout:2000})});</script>
 </head>
 <body class="has-mobile-cta">
 <a class="skip-link" href="#main">Skip to main content</a>
@@ -108,7 +107,7 @@
   <span class="mx-auto grid size-16 place-items-center rounded-full bg-juniper-100 text-juniper-800"><svg class="icon-lg" aria-hidden="true"><use href="assets/icons.svg#check"/></svg></span>
   <h1 class="title-1 mt-5" data-thanks-title>Thanks, you're all set.</h1>
   <p class="lead mt-3" data-thanks-sub>We'll be in touch within one business day.</p>
-  <ol class="mx-auto mt-10 grid max-w-xl gap-4 text-left">
+  <ol class="mx-auto mt-10 grid max-w-xl gap-4 text-left" data-thanks-steps>
     <li class="card flex gap-4 p-5"><span class="step-num">1</span><span><b class="block">We review your request</b>A real person reads it, usually within the hour.</span></li>
     <li class="card flex gap-4 p-5"><span class="step-num">2</span><span><b class="block">We text or call to confirm</b>From (970) 555-0142, so you'll know it's us.</span></li>
     <li class="card flex gap-4 p-5"><span class="step-num">3</span><span><b class="block">You get a fixed price</b>In writing, before any work starts.</span></li>

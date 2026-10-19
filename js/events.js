@@ -2,7 +2,7 @@
    ticketing. Dates are generated relative to today so the demo never shows past events. */
 (() => {
   'use strict';
-  const { $, $$, esc, money, icon, track, ics, stripeDemo, fmtDate, fmtTime, openDialog, payLink, sendLead, sendFailed, toast } = window.BB;
+  const { $, $$, esc, money, icon, track, ics, stripeDemo, fmtDate, fmtTime, openDialog, payLink, toStripe, sendLead, sendFailed, toast } = window.BB;
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const nextDow = (dow, ahead) => { const d = new Date(today); d.setDate(d.getDate() + ahead); while (d.getDay() !== dow) d.setDate(d.getDate() + 1); return d; };
   const at = (d, hhmm) => { const [h, m] = hhmm.split(':').map(Number); const x = new Date(d); x.setHours(h, m, 0, 0); return x; };
@@ -53,9 +53,9 @@
           <p class="muted mt-2">${esc(e.desc)}</p>
           <p class="help mt-2">${e.host ? `Led by ${esc(e.host)} · ` : ''}Up to ${e.seats} guests · At the garden center</p>
           <div class="mt-4 flex flex-wrap gap-2">
-            <button type="button" class="btn btn-primary btn-sm" data-register="${e.id}">${icon('ticket', 'icon-sm')} ${e.price ? 'Get tickets' : 'Reserve a spot'}</button>
-            <a class="btn btn-light btn-sm" href="event.html?e=${e.id}">Details</a>
-            <button type="button" class="btn btn-light btn-sm" data-ics="${e.id}">${icon('calendar', 'icon-sm')} Add to calendar</button>
+            <button type="button" class="btn btn-primary btn-sm" data-register="${e.id}">${icon('ticket', 'icon-sm')} ${e.price ? 'Get tickets' : 'Reserve a spot'}<span class="sr-only"> for ${esc(e.title)}</span></button>
+            <a class="btn btn-light btn-sm" href="event.html?e=${e.id}">Details<span class="sr-only"> about ${esc(e.title)}</span></a>
+            <button type="button" class="btn btn-light btn-sm" data-ics="${e.id}">${icon('calendar', 'icon-sm')} Add to calendar<span class="sr-only">: ${esc(e.title)}</span></button>
           </div>
         </div>
       </article>`).join('');
@@ -134,8 +134,8 @@
     const d = new FormData(form), qty = +d.get('qty');
     d.append('event', `${cur.title}, ${fmtDate(cur.start)} ${fmtTime(cur.start)}`);
     const link = cur.price && payLink(`event-${cur.id}`);
-    if (!(await sendLead(cur.price ? 'event-tickets' : 'event-rsvp', d))) { sendFailed(); return; }
-    if (link) { track('begin_checkout', { value: total(), currency: 'USD', item_category: 'event', event_id: cur.id }); toast(`Choose ${qty} ticket${qty > 1 ? 's' : ''} on the Stripe page.`); setTimeout(() => { location.href = link; }, 800); return; }
+    if (!(await sendLead(cur.price ? 'event-tickets' : 'event-rsvp', d))) { sendFailed(form); return; }
+    if (link) { track('begin_checkout', { value: total(), currency: 'USD', item_category: 'event', event_id: cur.id }); toStripe(link, { title: cur.title, note: qty > 1 ? `Set the quantity to <b>${qty}</b> on Stripe's page.` : '', email: d.get('email') }); return; }
     if (cur.price) {
       const paid = await stripeDemo({ title: cur.title, lines: [{ label: `${qty} ticket${qty > 1 ? 's' : ''} × ${money(cur.price)}`, amount: total() }], total: total() });
       if (!paid) return;

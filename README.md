@@ -28,9 +28,9 @@ no framework, no `package.json`. Every page is `noindex` so it never shows up in
      phone number swaps to the Google Ads tracking number).
    - `specials.html` has a real QR code; scanning it opens the promo page tagged as a
      flyer lead with the flyer's tracking number.
-   - `index.html?ref=MARIA50` shows what a referred friend sees.
+   - `index.html?ref=MAYA50` shows what a referred friend sees.
 
-No card is ever charged. What's live is set in the `CONFIG` block at the top of
+No real card is ever charged. What's live is set in the `CONFIG` block at the top of
 `js/main.js`; anything left empty there stays in demo mode:
 
 | Service | Status | Account |
@@ -38,12 +38,24 @@ No card is ever charged. What's live is set in the `CONFIG` block at the top of
 | GA4 | Live, `G-9CMP8DK83V` | "Bramble & Basalt demo site" property in the Bookcliff Web Analytics account |
 | Cal.com | Live: the booking page embeds the real calendar | `cal.com/demo-bcw`, the separate demo login |
 | Formspree | Live: every form and order request is emailed, with its lead source | Form `mkjoevop` in the separate demo login; free plan, 50 submissions a month |
-| Stripe | Not yet: checkout opens the demo dialog | — |
+| Stripe | Live in test mode: 39 Payment Links (every product and size, the 3 plans monthly and prepaid, the 5 paid events, 4 gift card amounts plus any-amount, invoice, donation). Each returns to `thank-you.html?form=paid&item=<key>` | "Bramble & Basalt demo" sandbox inside the Bookcliff Web Stripe account, so it never touches real payments |
 
 Bookings made on the demo land in the `demo-bcw` Cal.com account and email the address
 the visitor typed, so book with your own email when you show it. Form submissions go to
 the demo login's inbox. Formspree's spam filter sent a test with an example.com
 address and "test" in the message to its Spam tab, so demo with realistic details.
+
+To show a payment, pay with Stripe's test card **4242 4242 4242 4242**, any future date,
+any CVC and ZIP. Untick "Save my information with Link" first. The cart checkout and the
+rental, estimate and café flows still use the demo dialog: a static site can't build a
+mixed cart on Stripe without a server, so those stay simulated.
+
+GA4 loads after the page finishes and never for a visitor who taps Decline on the
+cookie notice (`bbLoadGA` in each page's `<head>`).
+
+`404.html` has `<base href="/bramble-basalt-demo/">` so it styles correctly at any missing
+path on GitHub Pages. That makes it look unstyled in the local preview; on a client's own
+domain the base is `/`.
 
 ## Preview locally
 
@@ -72,8 +84,8 @@ redeploys in about a minute.
 
 | In the demo | On a client site |
 |---|---|
-| Forms show a confirmation, nothing is sent | Formspree (`action` is already on the main forms); every form carries lead-source fields |
-| “Secure checkout powered by Stripe · demo mode” dialog | Stripe Payment Links or hosted Checkout, publishable key only |
+| Forms go to the demo Formspree inbox | The client's Formspree form; every form carries lead-source fields |
+| Stripe test-mode Payment Links, plus the “demo mode” dialog for the cart | The client's own Payment Links, or hosted Checkout with publishable key only |
 | Booking calendar (live Cal.com embed; generated open times if `CONFIG.cal` is empty) | The client's Cal.com or Calendly, lazy-loaded |
 | Estimate approval, waiver signatures | Documenso, DocuSign or Dropbox Sign for legally tracked signatures |
 | Chat assistant with scripted answers | HubSpot, Tidio or Crisp live chat, or an AI assistant |

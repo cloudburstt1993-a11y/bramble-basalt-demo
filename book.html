@@ -23,8 +23,7 @@
 <link rel="preload" href="assets/fonts/playfair-latin-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/style.css">
 <script>try{var q=location.search;if(/[?&]labels=on/.test(q)||(!/[?&]labels=off/.test(q)&&localStorage.getItem('bb-labels')==='true'))document.documentElement.classList.add('features-on')}catch(e){}</script>
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-9CMP8DK83V"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-9CMP8DK83V');</script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-9CMP8DK83V');window.bbLoadGA=function(){if(window.bbGA)return;window.bbGA=1;var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-9CMP8DK83V';document.head.appendChild(s)};addEventListener('load',function(){try{if(localStorage.getItem('bb-consent')==='"none"')return}catch(e){}(window.requestIdleCallback||setTimeout)(bbLoadGA,{timeout:2000})});</script>
 </head>
 <body class="has-mobile-cta">
 <a class="skip-link" href="#main">Skip to main content</a>
@@ -175,8 +174,10 @@
       </div>
     </aside>
   </div>
+  <p id="bk-live-status" class="sr-only" role="status"></p>
   <section id="bk-live" class="card mt-6 overflow-hidden p-2 md:p-4" hidden aria-labelledby="bk-live-h" data-feature="Live Cal.com calendar">
     <h2 id="bk-live-h" class="flex items-center gap-3 px-3 pt-3 font-sans text-lg font-semibold"><span class="step-num">2</span> Pick a time</h2>
+    <p class="help px-3">Want a different visit? Pick another service above.</p>
     <div id="cal-inline" class="min-h-160"></div>
   </section>
   <div id="bk-done" class="py-6" hidden></div>

@@ -23,8 +23,7 @@
 <link rel="preload" href="assets/fonts/playfair-latin-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/style.css">
 <script>try{var q=location.search;if(/[?&]labels=on/.test(q)||(!/[?&]labels=off/.test(q)&&localStorage.getItem('bb-labels')==='true'))document.documentElement.classList.add('features-on')}catch(e){}</script>
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-9CMP8DK83V"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-9CMP8DK83V');</script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-9CMP8DK83V');window.bbLoadGA=function(){if(window.bbGA)return;window.bbGA=1;var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-9CMP8DK83V';document.head.appendChild(s)};addEventListener('load',function(){try{if(localStorage.getItem('bb-consent')==='"none"')return}catch(e){}(window.requestIdleCallback||setTimeout)(bbLoadGA,{timeout:2000})});</script>
 </head>
 <body class="has-mobile-cta">
 <a class="skip-link" href="#main">Skip to main content</a>
@@ -105,7 +104,7 @@
 </header>
 <main id="main">
 <section class="container-x py-8 md:py-12">
-  <div id="product-root">
+  <div id="product-root" class="pdp-root">
     <noscript><p class="rounded-xl bg-sun-200 p-4">Product details need JavaScript. Browse the <a class="link" href="shop.html">shop</a> or call (970) 555-0142.</p></noscript>
   </div>
 </section>

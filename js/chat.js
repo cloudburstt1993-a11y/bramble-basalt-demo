@@ -13,7 +13,7 @@
     { k: ['sprinkler', 'blowout', 'irrigation', 'winterize', 'drip'], a: () => `Fall blowouts are $79 for up to 8 zones. <a href="${L('book.html?service=blowout')}">Book a blowout</a>, or read our <a href="${L('blog/sprinkler-blowout-checklist.html')}">blowout checklist</a>.` },
     { k: ['mow', 'lawn', 'plan', 'weekly', 'maintenance'], a: () => `Weekly yard care plans start at $149/month, April to November. <a href="${L('plans.html')}">Compare plans</a>.` },
     { k: ['coffee', 'cafe', 'café', 'latte', 'food', 'menu', 'lunch', 'breakfast'], a: () => `The Potting Shed Café is inside the garden center. <a href="${L('cafe.html')}">See the menu and order ahead</a>.` },
-    { k: ['where', 'address', 'direction', 'located', 'location', 'find you'], a: () => `We're at 2210 Basalt Bend Rd, Grand Junction. See <a href="${L('locations.html')}">both locations</a> with directions.` },
+    { k: ['where', 'address', 'direction', 'located', 'location', 'find you'], a: () => `We're at 2210 Basalt Bend Rd, Grand Junction, CO 81505. See <a href="${L('locations.html')}">both locations</a> with directions.` },
     { k: ['financ', 'monthly payment', 'pay over', 'loan', 'afford'], a: () => `Projects over $2,500 can be paid monthly. <a href="${L('financing.html')}">See financing options</a>.` },
     { k: ['job', 'hiring', 'career', 'work for', 'apply'], a: () => `We're hiring crew, irrigation techs and baristas. <a href="${L('careers.html')}">See open roles</a>.` },
     { k: ['gift'], a: () => `Gift cards are emailed instantly and never expire. <a href="${L('gift-cards.html')}">Design one</a>.` },
@@ -62,14 +62,14 @@
       const chip = e.target.closest('[data-chip]');
       if (chip) ask(chip.textContent);
     });
-    panel.addEventListener('submit', e => {
+    panel.addEventListener('submit', async e => {
       e.preventDefault();
       if (e.target.matches('[data-chat-form]')) { const q = $('#chat-q'); if (q.value.trim()) { ask(q.value.trim()); q.value = ''; } }
       if (e.target.matches('[data-chat-lead]')) {
         const d = new FormData(e.target);
+        if (!(await window.BB.sendLead('chat-callback', { name: String(d.get('name')), phone: String(d.get('phone')), page: location.pathname }))) { window.BB.sendFailed(e.target); return; }
         e.target.replaceWith(Object.assign(document.createElement('p'), { className: 'chat-msg chat-bot', innerHTML: `Thanks, ${esc(String(d.get('name')).split(' ')[0])}! Someone will call ${esc(d.get('phone'))} within the hour during business hours.` }));
         track('generate_lead', { form_name: 'chat', lead_source: window.BB.src });
-        window.BB.sendLead('chat-callback', { name: String(d.get('name')), phone: String(d.get('phone')), page: location.pathname });
       }
     });
     panel.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });

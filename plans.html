@@ -23,8 +23,7 @@
 <link rel="preload" href="assets/fonts/playfair-latin-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/style.css">
 <script>try{var q=location.search;if(/[?&]labels=on/.test(q)||(!/[?&]labels=off/.test(q)&&localStorage.getItem('bb-labels')==='true'))document.documentElement.classList.add('features-on')}catch(e){}</script>
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-9CMP8DK83V"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-9CMP8DK83V');</script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-9CMP8DK83V');window.bbLoadGA=function(){if(window.bbGA)return;window.bbGA=1;var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-9CMP8DK83V';document.head.appendChild(s)};addEventListener('load',function(){try{if(localStorage.getItem('bb-consent')==='"none"')return}catch(e){}(window.requestIdleCallback||setTimeout)(bbLoadGA,{timeout:2000})});</script>
 </head>
 <body class="has-mobile-cta">
 <a class="skip-link" href="#main">Skip to main content</a>
@@ -172,12 +171,12 @@
         <tbody>
           <tr><th scope="row" class="text-left font-normal">Weekly mow, edge &amp; blow</th><td><svg class="icon-sm mx-auto text-juniper-700" aria-hidden="true"><use href="assets/icons.svg#check"/></svg><span class="sr-only">Yes</span></td><td><svg class="icon-sm mx-auto text-juniper-700" aria-hidden="true"><use href="assets/icons.svg#check"/></svg><span class="sr-only">Yes</span></td><td><svg class="icon-sm mx-auto text-juniper-700" aria-hidden="true"><use href="assets/icons.svg#check"/></svg><span class="sr-only">Yes</span></td></tr>
           <tr><th scope="row" class="text-left font-normal">Spring &amp; fall cleanup</th><td><svg class="icon-sm mx-auto text-juniper-700" aria-hidden="true"><use href="assets/icons.svg#check"/></svg><span class="sr-only">Yes</span></td><td><svg class="icon-sm mx-auto text-juniper-700" aria-hidden="true"><use href="assets/icons.svg#check"/></svg><span class="sr-only">Yes</span></td><td><svg class="icon-sm mx-auto text-juniper-700" aria-hidden="true"><use href="assets/icons.svg#check"/></svg><span class="sr-only">Yes</span></td></tr>
-          <tr><th scope="row" class="text-left font-normal">Bed weeding</th><td><span aria-label="No">—</span></td><td>Every visit</td><td>Every visit</td></tr>
-          <tr><th scope="row" class="text-left font-normal">Shrub trimming</th><td><span aria-label="No">—</span></td><td>3× season</td><td>As needed</td></tr>
-          <tr><th scope="row" class="text-left font-normal">Fertilizer</th><td><span aria-label="No">—</span></td><td>4 treatments</td><td>4 treatments</td></tr>
-          <tr><th scope="row" class="text-left font-normal">Sprinkler checks</th><td><span aria-label="No">—</span></td><td>Monthly</td><td>Monthly + start-up &amp; blowout</td></tr>
-          <tr><th scope="row" class="text-left font-normal">Aeration &amp; overseed</th><td><span aria-label="No">—</span></td><td><span aria-label="No">—</span></td><td><svg class="icon-sm mx-auto text-juniper-700" aria-hidden="true"><use href="assets/icons.svg#check"/></svg><span class="sr-only">Yes</span></td></tr>
-          <tr><th scope="row" class="text-left font-normal">Seasonal color</th><td><span aria-label="No">—</span></td><td><span aria-label="No">—</span></td><td>2 plantings</td></tr>
+          <tr><th scope="row" class="text-left font-normal">Bed weeding</th><td><span aria-hidden="true">—</span><span class="sr-only">No</span></td><td>Every visit</td><td>Every visit</td></tr>
+          <tr><th scope="row" class="text-left font-normal">Shrub trimming</th><td><span aria-hidden="true">—</span><span class="sr-only">No</span></td><td>3× season</td><td>As needed</td></tr>
+          <tr><th scope="row" class="text-left font-normal">Fertilizer</th><td><span aria-hidden="true">—</span><span class="sr-only">No</span></td><td>4 treatments</td><td>4 treatments</td></tr>
+          <tr><th scope="row" class="text-left font-normal">Sprinkler checks</th><td><span aria-hidden="true">—</span><span class="sr-only">No</span></td><td>Monthly</td><td>Monthly + start-up &amp; blowout</td></tr>
+          <tr><th scope="row" class="text-left font-normal">Aeration &amp; overseed</th><td><span aria-hidden="true">—</span><span class="sr-only">No</span></td><td><span aria-hidden="true">—</span><span class="sr-only">No</span></td><td><svg class="icon-sm mx-auto text-juniper-700" aria-hidden="true"><use href="assets/icons.svg#check"/></svg><span class="sr-only">Yes</span></td></tr>
+          <tr><th scope="row" class="text-left font-normal">Seasonal color</th><td><span aria-hidden="true">—</span><span class="sr-only">No</span></td><td><span aria-hidden="true">—</span><span class="sr-only">No</span></td><td>2 plantings</td></tr>
         </tbody>
       </table>
     </div>
@@ -197,7 +196,7 @@
         <li class="flex gap-3"><span class="text-sun-300"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#gift"/></svg></span><span><b class="block text-white">Birthday plant</b>A free 4-inch perennial</span></li>
       </ul>
     </div>
-    <div class="rounded-3xl bg-white p-6 text-basalt-900 md:p-8" data-feature="Loyalty program signup">
+    <div class="surface-light rounded-3xl bg-white p-6 text-basalt-900 md:p-8" data-feature="Loyalty program signup">
       <form class="grid gap-4" data-demo-form="garden-club" data-event="sign_up">
         <h3 class="title-3">Sign up in 20 seconds</h3>
         <div class="field"><label class="label" for="gc-first">First name</label><input id="gc-first" class="input" name="name" required autocomplete="given-name"></div>

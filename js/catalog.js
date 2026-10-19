@@ -70,8 +70,8 @@
     const action = !inStock
       ? `<a class="btn btn-light btn-sm btn-block" href="${href}#notify">Notify me</a>`
       : multi
-        ? `<a class="btn btn-outline btn-sm btn-block" href="${href}">Choose options</a>`
-        : `<button type="button" class="btn btn-primary btn-sm btn-block" data-add="${p.id}">Add to cart</button>`;
+        ? `<a class="btn btn-outline btn-sm btn-block" href="${href}">Choose options<span class="sr-only">: ${p.name}</span></a>`
+        : `<button type="button" class="btn btn-primary btn-sm btn-block" data-add="${p.id}">Add to cart<span class="sr-only">: ${p.name}</span></button>`;
     return `<article class="card card-link relative flex flex-col overflow-hidden" data-product data-cat="${p.cat}" data-price="${p.sale ?? p.price}" data-order="${i}" data-instock="${inStock ? 1 : 0}" data-name="${p.name.toLowerCase()} ${(p.badges || []).join(' ').toLowerCase()} ${CATS[p.cat].toLowerCase()}">
   <a href="${href}" class="relative block aspect-square bg-sand-100" tabindex="-1" aria-hidden="true">
     <img src="assets/img/product-${p.id}.svg" alt="" width="600" height="600" loading="lazy" decoding="async" class="h-full w-full object-cover">

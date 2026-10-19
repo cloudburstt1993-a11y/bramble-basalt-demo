@@ -2,7 +2,7 @@
    client signs, then pays the deposit (Stripe in live builds, a stand-in here). */
 (() => {
   'use strict';
-  const { $, $$, esc, money, icon, track, stripeDemo, fmtDate, sendLead } = window.BB;
+  const { $, $$, esc, money, icon, track, stripeDemo, fmtDate, sendLead, sendFailed } = window.BB;
   const form = $('#est-approve');
   if (!form) return;
   const DEPOSIT = 0.3;
@@ -39,8 +39,8 @@
       note: 'The balance is invoiced at the final walkthrough.',
     });
     if (!paid) return;
+    if (!(await sendLead('estimate-approved', { estimate: 'Q-2026-0142', signer: String(d.get('signer')), options: t.opts.map(o => o.dataset.label).join('; ') || 'none', total: money(t.total), deposit: money(t.deposit), signature: String(d.get('signature')).startsWith('typed:') ? String(d.get('signature')) : 'drawn' }))) { sendFailed(form); return; }
     track('estimate_approved', { value: t.total, currency: 'USD', deposit: t.deposit });
-    sendLead('estimate-approved', { estimate: 'Q-2026-0142', signer: String(d.get('signer')), options: t.opts.map(o => o.dataset.label).join('; ') || 'none', total: money(t.total), deposit: money(t.deposit), signature: String(d.get('signature')).startsWith('typed:') ? String(d.get('signature')) : 'drawn' });
     const start = new Date(); start.setDate(start.getDate() + 21);
     form.hidden = true;
     const done = $('#est-done');
@@ -54,9 +54,9 @@
     $('#est-done-h').focus();
   });
 
-  $('#q-changes-send')?.addEventListener('click', () => {
+  $('#q-changes-send')?.addEventListener('click', async () => {
     if (!$('#q-change').value.trim()) { $('#q-change').focus(); return; }
-    window.BB.sendLead('estimate-change-request', { estimate: 'Q-2026-0142', changes: $('#q-change').value.trim() });
+    if (!(await sendLead('estimate-change-request', { estimate: 'Q-2026-0142', changes: $('#q-change').value.trim() }))) { sendFailed($('#q-changes-form')); return; }
     $('#q-changes-form').hidden = true;
     $('#q-changes-ok').hidden = false;
     track('estimate_change_request');

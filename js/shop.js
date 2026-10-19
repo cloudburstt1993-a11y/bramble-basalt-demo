@@ -2,7 +2,7 @@
    Needs main.js (window.BB) and catalog.js (window.BB_CATALOG). */
 (() => {
   'use strict';
-  const { $, $$, esc, money, icon, store, toast, track, cart, stripeDemo, payLink, sendLead } = window.BB;
+  const { $, $$, esc, money, icon, store, toast, track, cart, stripeDemo, payLink, toStripe, sendLead, sendFailed } = window.BB;
   const CATALOG = window.BB_CATALOG || [];
   const CATS = window.BB_CATS || {};
   const byId = id => CATALOG.find(p => p.id === id);
@@ -157,7 +157,11 @@
     } else {
       // The notify form was injected after main.js wired forms, so wire it here.
       const nf = $('form[data-demo-form]', pRoot);
-      nf.addEventListener('submit', e => { e.preventDefault(); nf.hidden = true; const ok = $('[data-form-success]', pRoot); ok.hidden = false; ok.focus(); track('back_in_stock_signup', { item_id: p.id }); });
+      nf.addEventListener('submit', async e => {
+        e.preventDefault();
+        if (!(await sendLead('back-in-stock', { email: String(new FormData(nf).get('email')), product: p.name }))) { sendFailed(nf); return; }
+        nf.hidden = true; const ok = $('[data-form-success]', pRoot); ok.hidden = false; ok.focus(); track('back_in_stock_signup', { item_id: p.id });
+      });
     }
     track('view_item', { currency: 'USD', value: priceOf(0), items: [{ item_id: p.id, item_name: p.name }] });
 
@@ -301,9 +305,9 @@
       toast(`${icon('tag', 'icon-sm')} ${code} applied`);
     });
 
-    function confirm(items, t) {
+    async function confirm(items, t) {
       const order = 'BB-' + String(Math.floor(10000 + Math.random() * 89999));
-      sendLead('online-order', { order, items: items.map(i => `${i.qty} × ${i.name}${i.variant ? ' (' + i.variant + ')' : ''}`).join('; '), total: money(t.total), fulfillment: t.ship });
+      if (!(await sendLead('online-order', { order, items: items.map(i => `${i.qty} × ${i.name}${i.variant ? ' (' + i.variant + ')' : ''}`).join('; '), total: money(t.total), fulfillment: t.ship }))) { sendFailed(); return; }
       track('purchase', { transaction_id: order, currency: 'USD', value: t.total, items: items.map(i => ({ item_id: i.id, item_name: i.name, price: i.price, quantity: i.qty })) });
       cart.clear(); store.set(OPTS, {});
       const next = { pickup: 'We’ll text you when it’s ready, usually within 2 hours. Pull into the pickup spots by the café and we’ll bring it out.', delivery: 'We’ll text you a delivery window for tomorrow. Bulk mulch is dumped where you point.', ship: 'You’ll get a tracking link by email within one business day.', none: 'Gift cards are on their way to the recipient’s inbox now.' }[t.ship];
@@ -352,7 +356,7 @@
     if (!payLink('giftcard-custom') && ![25, 50, 100, 150].some(v => payLink('giftcard-' + v))) $$('[data-gc-buy]').forEach(b => { b.hidden = true; });
     gc.addEventListener('input', update);
     gc.addEventListener('change', update);
-    gc.addEventListener('submit', e => {
+    gc.addEventListener('submit', async e => {
       e.preventDefault();
       const a = amount();
       if (a < 10 || a > 500) { toast('Choose an amount between $10 and $500.'); custom.focus(); return; }
@@ -362,10 +366,9 @@
       const deliv = d.get('delivery') === 'print' ? 'print at home' : d.get('delivery') === 'schedule' ? `emails ${new Date(d.get('when') + 'T12:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : 'emails now';
       const gl = payLink(`giftcard-${a}`) || payLink('giftcard-custom');
       if (gl && e.submitter && e.submitter.hasAttribute('data-gc-buy')) {
-        sendLead('gift-card', { amount: money(a), design, to, from: String(d.get('from') || ''), recipient_email: String(d.get('email') || ''), message: String(d.get('message') || ''), delivery: deliv });
+        if (!(await sendLead('gift-card', { amount: money(a), design, to, from: String(d.get('from') || ''), recipient_email: String(d.get('email') || ''), message: String(d.get('message') || ''), delivery: deliv }))) { sendFailed(gc); return; }
         track('begin_checkout', { value: a, currency: 'USD', item_category: 'gift card' });
-        if (!payLink(`giftcard-${a}`)) toast(`Enter <b>${money(a)}</b> on the Stripe page.`);
-        setTimeout(() => { location.href = gl; }, payLink(`giftcard-${a}`) ? 0 : 900);
+        toStripe(gl, { title: `Gift card · ${money(a).replace('.00', '')}`, note: payLink(`giftcard-${a}`) ? '' : `Enter <b>${money(a)}</b> as the amount on Stripe's page.` });
         return;
       }
       cart.add({ key: 'gc-' + Date.now(), unique: true, id: 'gift-card', name: `Gift card · ${money(a).replace('.00', '')}`, variant: `${design} design · to ${to} · ${deliv}`, price: a, qty: 1, img: 'assets/img/product-gift-card.svg', ship: 'digital', href: 'gift-cards.html' });

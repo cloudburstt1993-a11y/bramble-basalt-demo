@@ -5,7 +5,7 @@
   const { $, esc, icon, track, store } = window.BB;
   const form = $('#refer-form');
   if (!form) return;
-  form.addEventListener('submit', e => {
+  form.addEventListener('submit', async e => {
     e.preventDefault();
     const d = new FormData(form);
     const first = String(d.get('name')).trim().split(/\s+/)[0] || 'friend';
@@ -14,6 +14,7 @@
     link.searchParams.set('ref', code);
     link.searchParams.set('utm_source', 'referral');
     link.searchParams.set('utm_medium', 'friend');
+    if (!(await window.BB.sendLead('referral-signup', { name: String(d.get('name')), email: String(d.get('email')), code }))) { window.BB.sendFailed(form); return; }
     store.set('bb-my-ref', code);
     form.hidden = true;
     const ok = $('#refer-ok');
@@ -28,6 +29,5 @@
       </div>`;
     $('#refer-h').focus();
     track('referral_created', { lead_source: window.BB.src });
-    window.BB.sendLead('referral-signup', { name: String(d.get('name')), email: String(d.get('email')), code });
   });
 })();

@@ -2,7 +2,7 @@
    and a refundable deposit. */
 (() => {
   'use strict';
-  const { $, $$, esc, money, icon, track, stripeDemo, ics, fmtDate, sendLead } = window.BB;
+  const { $, $$, esc, money, icon, track, stripeDemo, ics, fmtDate, sendLead, sendFailed } = window.BB;
   const form = $('#rent-form');
   if (!form) return;
   const ITEMS = {
@@ -66,7 +66,7 @@
     if (!paid) return;
     track('purchase', { value: c.total, currency: 'USD', item_category: 'rental', item_name: c.it.name });
     const fd = new FormData(form); fd.append('equipment', c.it.name); fd.append('dates', `${fmtDate(c.a)} to ${fmtDate(c.b)}`); fd.append('total', money(c.total));
-    sendLead('rental-reservation', fd);
+    if (!(await sendLead('rental-reservation', fd))) { sendFailed(form); return; }
     const pickup = new Date(c.a); pickup.setHours(8, 0, 0, 0);
     const done = $('#rent-done');
     form.hidden = true; done.hidden = false;
