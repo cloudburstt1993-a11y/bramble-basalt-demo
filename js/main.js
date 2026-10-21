@@ -24,6 +24,9 @@
   const CONFIG = {
     ga4: 'G-9CMP8DK83V',  // loaded in <head> on every page
     formspree: 'mkjoevop', // https://formspree.io/f/<id>, in the demo Formspree login
+    // Bookcliff Web's Lead Reply, demo edition (n8n MD-demo-lead-reply): the contact and quote forms also get an
+    // instant reply, labelled as a demo, at the address typed. Off (and harmless) until that workflow is published.
+    leadReply: 'https://bizstack.taildfc1e9.ts.net/webhook/demo-lead',
     // cal.com/demo-bcw: booking type slugs keyed by the service radios on book.html
     cal: { user: 'demo-bcw', events: { estimate: 'estimate', design: 'design', blowout: 'blowout', lawn: 'lawn', shop: 'shop' } },
     // Stripe Payment Links in the "Bramble & Basalt demo" sandbox (test mode, no
@@ -436,7 +439,19 @@
   // Formspree. File uploads need a paid Formspree plan, so files are listed by
   // name instead, and a drawn signature (a PNG data URL) is noted, not pasted
   // into the email. Without it, nothing leaves the browser.
+  const LEAD_REPLY_FORMS = ['contact', 'quote-request'];
+  // Fire and forget: the reply is a bonus, so it never holds up or fails the form.
+  function sendLeadReply(name, data) {
+    if (!CONFIG.leadReply || !LEAD_REPLY_FORMS.includes(name)) return;
+    const fd = data instanceof FormData ? data : new FormData();
+    const body = new URLSearchParams();
+    ['name', 'first', 'email', 'phone', 'topic', 'service', 'message', 'details', '_gotcha'].forEach(k => { const v = fd.get(k); if (typeof v === 'string' && v) body.append(k, v.slice(0, 1000)); });
+    if (!body.get('email')) return;
+    body.append('page', location.pathname);
+    fetch(CONFIG.leadReply, { method: 'POST', mode: 'no-cors', body }).catch(() => {});
+  }
   async function sendLead(name, data) {
+    sendLeadReply(name, data);
     if (!CONFIG.formspree) return true;
     const fd = data instanceof FormData ? data : Object.entries(data).reduce((x, [k, v]) => { x.append(k, v); return x; }, new FormData());
     const files = [];
