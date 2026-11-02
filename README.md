@@ -61,8 +61,8 @@ domain the base is `/`.
 
 25 pictures are real photos from Wikimedia Commons: the home hero, the café, the project and service scenes, and 13
 products. Every one is public domain, CC0, CC BY or CC BY-SA. Each is credited, with a link to its licence, on
-[](photo-credits.html), which every page's footer links to. They were cropped and resized to WebP
-in . Product pictures go through  in : list a product there
+[`photo-credits.html`](photo-credits.html), which every page's footer links to. They were cropped and resized to WebP
+in `assets/img/photos/`. Product pictures go through `window.BB_productImg` in `js/catalog.js`: list a product there
 when it gets a photo. These stay as drawings on purpose:
 - The team portraits: real faces would pass strangers off as staff.
 - The before-and-after slider pairs: two unrelated yards would fake a transformation.
