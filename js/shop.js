@@ -51,9 +51,9 @@
     const inStock = p.stock !== false;
     const scene = { plants: 'scene-path', pottery: 'scene-pond', tools: 'scene-beds', soil: 'scene-beds', gifts: 'cafe-hero' }[p.cat];
     const views = [
-      { src: `assets/img/product-${p.id}.svg`, alt: p.name, cls: '' },
-      { src: `assets/img/product-${p.id}.svg`, alt: `${p.name}, close-up`, cls: 'scale-150' },
-      { src: `assets/img/${scene}.svg`, alt: 'Styled in a Western Slope garden', cls: '' },
+      { src: window.BB_productImg(p.id), alt: p.name, cls: '' },
+      { src: window.BB_productImg(p.id), alt: `${p.name}, close-up`, cls: 'scale-150' },
+      { src: `assets/img/photos/${scene}.webp`, alt: 'A garden setting', cls: '' },
     ];
     document.title = `${p.name} | Bramble & Basalt Garden Co.`;
     const variants = p.variants || [];
@@ -152,7 +152,7 @@
       form.addEventListener('submit', e => {
         e.preventDefault();
         const vi = +(new FormData(form).get('variant') || 0);
-        cart.add({ key: p.id + ':' + vi, id: p.id, name: p.name, variant: variants[vi] ? variants[vi][0] : '', price: priceOf(vi), qty: Math.max(1, Math.min(99, +qty.value || 1)), img: `assets/img/product-${p.id}.svg`, ship: p.ship, href: `product.html?p=${p.id}` });
+        cart.add({ key: p.id + ':' + vi, id: p.id, name: p.name, variant: variants[vi] ? variants[vi][0] : '', price: priceOf(vi), qty: Math.max(1, Math.min(99, +qty.value || 1)), img: window.BB_productImg(p.id), ship: p.ship, href: `product.html?p=${p.id}` });
       });
     } else {
       // The notify form was injected after main.js wired forms, so wire it here.
@@ -421,7 +421,7 @@
       if (e.target.closest('[data-wish-keep]')) { store.set('bb-wish', [...new Set([...store.get('bb-wish', []), ...shared.split(',').filter(byId)])]); toast('Saved to your list.'); }
       if (e.target.closest('[data-wish-all]')) {
         const ids = (shared ? shared.split(',') : store.get('bb-wish', [])).filter(byId);
-        ids.forEach(id => { const p = byId(id); if (p.stock === false) return; const v = p.variants ? p.variants[0] : null; cart.add({ key: p.id + ':0', id: p.id, name: p.name, variant: v ? v[0] : '', price: v ? v[1] : (p.sale ?? p.price), qty: 1, img: `assets/img/product-${p.id}.svg`, ship: p.ship, href: `product.html?p=${p.id}` }, { silent: true }); });
+        ids.forEach(id => { const p = byId(id); if (p.stock === false) return; const v = p.variants ? p.variants[0] : null; cart.add({ key: p.id + ':0', id: p.id, name: p.name, variant: v ? v[0] : '', price: v ? v[1] : (p.sale ?? p.price), qty: 1, img: window.BB_productImg(p.id), ship: p.ship, href: `product.html?p=${p.id}` }, { silent: true }); });
         toast(`${icon('check', 'icon-sm')} Added your saved items to the cart`, { href: 'cart.html', label: 'View cart' });
       }
     });

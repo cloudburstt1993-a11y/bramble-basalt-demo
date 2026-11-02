@@ -57,6 +57,20 @@ cookie notice (`bbLoadGA` in each page's `<head>`).
 path on GitHub Pages. That makes it look unstyled in the local preview; on a client's own
 domain the base is `/`.
 
+## Photos (November 2026)
+
+25 pictures are real photos from Wikimedia Commons: the home hero, the café, the project and service scenes, and 13
+products. Every one is public domain, CC0, CC BY or CC BY-SA. Each is credited, with a link to its licence, on
+[](photo-credits.html), which every page's footer links to. They were cropped and resized to WebP
+in . Product pictures go through  in : list a product there
+when it gets a photo. These stay as drawings on purpose:
+- The team portraits: real faces would pass strangers off as staff.
+- The before-and-after slider pairs: two unrelated yards would fake a transformation.
+- The gift cards, the cap and the map.
+- The basalt glaze planter and the hori-hori knife, because no free photo matched them.
+
+To swap a photo, keep its file name and aspect (4:3 scenes, square products), and update its credit.
+
 ## Preview locally
 
 ```
