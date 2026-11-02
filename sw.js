@@ -4,8 +4,8 @@
    opened fall back to offline.html.
    CSS, JS, fonts and images: served from the cache at once and refreshed in the
    background (stale-while-revalidate). Anything else: network, cache if offline. */
-const CACHE = 'bb-v2';
-const CORE = ['offline.html', 'css/style.css', 'js/main.js', 'assets/icons.svg', 'assets/favicon.svg', 'assets/img/scene-path.svg',
+const CACHE = 'bb-v3';
+const CORE = ['offline.html', 'css/style.css', 'js/main.js', 'assets/icons.svg', 'assets/favicon.svg', 'assets/img/photos/scene-path.webp',
   'assets/fonts/inter-latin-var.woff2', 'assets/fonts/playfair-latin-var.woff2'];
 const PAGE_TIMEOUT = 3000;
 const ASSET = /\.(?:css|js|woff2?|svg|png|jpe?g|gif|webp|avif|ico)$/i;

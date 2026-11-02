@@ -3,6 +3,9 @@
    ship: 'all' = can ship; 'local' = pickup or local delivery only (live plants, bulk). */
 (function (root) {
   'use strict';
+  // Products with a real photo (HQ D-052, credits in photo-credits.html); the rest keep their drawing.
+  const PHOTO = new Set(["lavender","penstemon","apache-plume","blue-grama","claret-cup","hens-chicks","wildflower-seed","terracotta-bowl","cedar-mulch","potting-mix","watering-can","gloves","house-coffee"]);
+  root.BB_productImg = (id) => PHOTO.has(id) ? `assets/img/photos/product-${id}.webp` : `assets/img/product-${id}.svg`;
   const CATS = { plants: 'Plants', pottery: 'Pottery', tools: 'Tools', soil: 'Soil & seed', gifts: 'Gifts & café' };
   const BADGE = { Native: 'chip-juniper', 'Water-wise': 'chip-juniper', Pollinator: 'chip-sun', Sale: 'chip-clay', New: 'chip-dark', Bulk: 'chip-outline' };
 
@@ -74,7 +77,7 @@
         : `<button type="button" class="btn btn-primary btn-sm btn-block" data-add="${p.id}">Add to cart<span class="sr-only">: ${p.name}</span></button>`;
     return `<article class="card card-link relative flex flex-col overflow-hidden" data-product data-cat="${p.cat}" data-price="${p.sale ?? p.price}" data-order="${i}" data-instock="${inStock ? 1 : 0}" data-name="${p.name.toLowerCase()} ${(p.badges || []).join(' ').toLowerCase()} ${CATS[p.cat].toLowerCase()}">
   <a href="${href}" class="relative block aspect-square bg-sand-100" tabindex="-1" aria-hidden="true">
-    <img src="assets/img/product-${p.id}.svg" alt="" width="600" height="600" loading="lazy" decoding="async" class="h-full w-full object-cover">
+    <img src="${root.BB_productImg(p.id)}" alt="" width="600" height="600" loading="lazy" decoding="async" class="h-full w-full object-cover">
     <span class="absolute left-3 top-3 flex flex-wrap gap-1">${badgeHTML(p)}</span>
     ${inStock ? '' : '<span class="absolute bottom-3 left-3 chip chip-dark">Out of stock</span>'}
   </a>

@@ -195,7 +195,7 @@
     const vi = Number(b.dataset.variant || 0);
     const v = p.variants ? p.variants[vi] : null;
     const price = v ? v[1] : (p.sale ?? p.price);
-    cart.add({ key: p.id + ':' + vi, id: p.id, name: p.name, variant: v ? v[0] : '', price, qty: 1, img: `assets/img/product-${p.id}.svg`, ship: p.ship, href: `product.html?p=${p.id}` });
+    cart.add({ key: p.id + ':' + vi, id: p.id, name: p.name, variant: v ? v[0] : '', price, qty: 1, img: window.BB_productImg ? window.BB_productImg(p.id) : `assets/img/product-${p.id}.svg`, ship: p.ship, href: `product.html?p=${p.id}` });
   });
 
   /* --------------------------------------------------------- dialogs -- */
